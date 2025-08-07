@@ -1,5 +1,9 @@
 pipeline {
     agent any
+    environment {
+        SONAR_USER = 'http://192.168.1.40:9000/'
+        SONAR_TOKEN = 'sonar-token'
+    }
 
     stages {
         stage('Checkout') {
@@ -62,8 +66,7 @@ pipeline {
             environment {
                 JAVA_HOME = '/usr/lib/jvm/java-17-openjdk-amd64'
                 PATH = "${JAVA_HOME}/bin:${env.PATH}"
-                SONAR_USER = 'http://192.168.1.40:9000/'
-                SONAR_TOKEN = 'sonar-token'
+                
             }
             steps {
                 sh "mvn sonar:sonar -Dsonar.host.url=${SONAR_URL} -Dsonar.login=${SONAR_TOKEN}  -Dsonar.java.binaries=."
