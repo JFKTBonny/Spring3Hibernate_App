@@ -2,7 +2,7 @@ pipeline {
     agent any
     environment {
         SONAR_URL = 'http://192.168.1.40:9000'
-        SONAR_TOKEN = 'sonar-token'
+        SONAR_TOKEN = credentials('sonar-token') // Use credentials directly
     }
 
     stages {
@@ -64,17 +64,12 @@ pipeline {
         }
         stage('Sonarqube Analysis') {
             environment {
-                JAVA_HOME = '/usr/lib/jvm/java-17-openjdk-amd64'
+                JAVA_HOME = '/usr/lib/jvm/temurin-17-jdk-amd64'
                 PATH = "${JAVA_HOME}/bin:${env.PATH}"
-                
             }
             steps {
-                withCredentials([string(credentialsId: 'sonar-token', variable: 'SONAR_TOKEN')]) {
-                    withEnv(["SONAR_URL=http://192.168.1.40:9000"]) {
-                        echo "SonarQube URL: ${env.SONAR_URL}"
-                        sh "mvn sonar:sonar -Dsonar.host.url=${env.SONAR_URL} -Dsonar.login=${env.SONAR_TOKEN} -Dsonar.java.binaries=."
-                    }
-                }
+                echo "SonarQube URL: ${env.SONAR_URL}"
+                sh "mvn sonar:sonar -Dsonar.host.url=${env.SONAR_URL} -Dsonar.login=${env.SONAR_TOKEN} -Dsonar.java.binaries=."
             }
         }
         stage('Uploading Artifact') {
