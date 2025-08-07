@@ -1,7 +1,7 @@
 pipeline {
     agent any
     environment {
-        SONAR_USER = 'http://192.168.1.40:9000/'
+        SONAR_URL = 'http://192.168.1.40:9000'
         SONAR_TOKEN = 'sonar-token'
     }
 
@@ -69,8 +69,12 @@ pipeline {
                 
             }
             steps {
-                echo "SonarQube URL: ${env.SONAR_URL}"
-                sh "mvn sonar:sonar -Dsonar.host.url=${env.SONAR_URL} -Dsonar.login=${env.SONAR_TOKEN} -Dsonar.java.binaries=."
+                withCredentials([string(credentialsId: 'sonar-token', variable: 'SONAR_TOKEN')]) {
+                    withEnv(["SONAR_URL=http://192.168.1.40:9000"]) {
+                        echo "SonarQube URL: ${env.SONAR_URL}"
+                        sh "mvn sonar:sonar -Dsonar.host.url=${env.SONAR_URL} -Dsonar.login=${env.SONAR_TOKEN} -Dsonar.java.binaries=."
+                    }
+                }
             }
         }
         stage('Uploading Artifact') {
