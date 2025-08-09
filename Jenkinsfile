@@ -55,7 +55,7 @@ pipeline {
                 PATH = "${JAVA_HOME}/bin:${env.PATH}"
             }
             steps {
-                sh 'mvn org.owasp:dependency-check-maven:check'
+                sh 'mvn org.owasp:dependency-check-maven:check --nvdApiKey ${env.NVD_API_KEY}'
                 publishHTML([
                     allowMissing: false,
                     alwaysLinkToLastBuild: false,
