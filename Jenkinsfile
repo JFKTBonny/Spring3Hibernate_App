@@ -20,7 +20,7 @@ pipeline {
         }
         stage('Code Stability') {
             environment {
-                JAVA_HOME = '/usr/lib/jvm/java-8-openjdk-amd64'
+                JAVA_HOME = '/usr/lib/jvm/java-11-openjdk-amd64'
                 PATH = "${JAVA_HOME}/bin:${env.PATH}"
             }
             steps {
@@ -29,7 +29,7 @@ pipeline {
         }
         stage('Code Quality') {
             environment {
-                JAVA_HOME = '/usr/lib/jvm/java-8-openjdk-amd64'
+                JAVA_HOME = '/usr/lib/jvm/java-11-openjdk-amd64'
                 PATH = "${JAVA_HOME}/bin:${env.PATH}"
             }
             steps {
@@ -39,7 +39,7 @@ pipeline {
         }
         stage('Unit Testing') {
             environment {
-                JAVA_HOME = '/usr/lib/jvm/java-8-openjdk-amd64'
+                JAVA_HOME = '/usr/lib/jvm/java-11-openjdk-amd64'
                 PATH = "${JAVA_HOME}/bin:${env.PATH}"
             }
             steps {
@@ -49,7 +49,7 @@ pipeline {
         }
         stage('Security Testing') {
             environment {
-                JAVA_HOME = '/usr/lib/jvm/java-8-openjdk-amd64'
+                JAVA_HOME = '/usr/lib/jvm/java-11-openjdk-amd64'
                 PATH = "${JAVA_HOME}/bin:${env.PATH}"
             }
             steps {
