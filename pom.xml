@@ -15,14 +15,14 @@
 	 <distributionManagement>
    <!-- use the following if you're not using a snapshot version. -->
    <repository>
-     <id>spring3hibernate</id>
-     <name>spring3hibernate</name>
-     <url>${env.NEXUS_URL}/repository/spring3hibernate</url>
+     <id>maven-releases</id>
+     <name>maven-releases</name>
+     <url>http://192.168.1.40:8081/repository/maven-releases</url>
    </repository>
 	<snapshotRepository>
           <id>snapshots</id>
           <name>maven-snapshots</name>
-	      <url>${env.NEXUS_URL}/repository/maven-snapshots</url>
+	      <url>http://192.168.1.40:8081/repository/maven-snapshots</url>
         </snapshotRepository>
 
 	

@@ -1,15 +1,58 @@
+
 ---
 - hosts: devservers
   become: true
   vars:
-    nexus_artifact_url: ""
-  tasks:
-  - name: Download the package on the remote system
-    get_url:
-      url: "{{ nexus_artifact_url }}"
-      dest: /var/lib/tomcat9/webapps/ROOT.war
+    nexus_artifact_url: ""   # Provide the actual URL when running
 
-  - name: Restart tomcat service on the system
-    systemd:
-      name: tomcat9
-      state: restarted
+  tasks:
+    - name: Update apt cache
+      apt:
+        update_cache: yes
+        cache_valid_time: 3600
+
+    - name: Install Java and Tomcat 9 packages
+      apt:
+        name:
+          - openjdk-11-jre-headless   # or openjdk-21-jre if preferred
+          - tomcat9
+          - tomcat9-admin
+          - tomcat9-common
+        state: present
+
+    - name: Ensure Tomcat service is started and enabled
+      systemd:
+        name: tomcat9
+        state: started
+        enabled: yes
+
+    - name: Download the WAR file to Tomcat webapps directory
+      get_url:
+        url: "{{ nexus_artifact_url }}"
+        dest: /var/lib/tomcat9/webapps/ROOT.war
+        owner: tomcat
+        group: tomcat
+        mode: '0644'
+
+    - name: Restart Tomcat service to deploy the new WAR
+      systemd:
+        name: tomcat9
+        state: restarted
+
+
+
+# ---
+# - hosts: devservers
+#   become: true
+#   vars:
+#     nexus_artifact_url: ""
+#   tasks:
+#   - name: Download the package on the remote system
+#     get_url:
+#       url: "{{ nexus_artifact_url }}"
+#       dest: /var/lib/tomcat9/webapps/ROOT.war
+
+#   - name: Restart tomcat service on the system
+#     systemd:
+#       name: tomcat9
+#       state: restarted
