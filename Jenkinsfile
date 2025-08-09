@@ -89,7 +89,7 @@ pipeline {
                     file: 'target/Spring3HibernateApp.war',
                     type: 'war'
                 ]],
-                credentialsId: 'nexus-creds',
+                credentialsId: 'nexus-credentials',
                 groupId: 'org',
                 nexusUrl: 'http://192.168.1.40:8081/',
                 nexusVersion: 'nexus3',
