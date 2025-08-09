@@ -1,6 +1,7 @@
 pipeline {
     agent any
     environment {
+        NVD_API_KEY = credentials('NVD_API_KEY')
 
         NEXUS_URL = 'http://192.168.1.40:8081'
         SONAR_URL = 'http://192.168.1.40:9000'
@@ -49,6 +50,7 @@ pipeline {
         }
         stage('Security Testing') {
             environment {
+                NVD_API_KEY = credentials('NVD_API_KEY')
                 JAVA_HOME = '/usr/lib/jvm/java-11-openjdk-amd64'
                 PATH = "${JAVA_HOME}/bin:${env.PATH}"
             }

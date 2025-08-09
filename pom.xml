@@ -75,6 +75,11 @@
               <groupId>org.owasp</groupId>
               <artifactId>dependency-check-maven</artifactId>
               <version>6.0.3</version>
+			  <configuration>
+				<nvd>
+					<apiKey>${env.NVD_API_KEY}</apiKey>
+				</nvd>
+			  </configuration>
               <executions>
                   <execution>
                       <goals>
