@@ -94,7 +94,7 @@ pipeline {
                 nexusUrl: '192.168.1.40:8081',
                 nexusVersion: 'nexus3',
                 protocol: 'http',
-                repository: 'spring3hibernate',
+                repository: 'maven-releases',
                 version: 'v0.1'
             }
         }
