@@ -35,7 +35,7 @@ pipeline {
                 dir(env.TF_DIR) {
                     sh 'terraform init'
                     sh 'terraform validate'
-                    sh 'terraform destroy -auto-approve'
+                    sh 'terraform apply -auto-approve'
                 }
             }
         } 
