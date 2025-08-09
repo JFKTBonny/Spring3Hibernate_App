@@ -30,15 +30,15 @@ pipeline {
             }
         }
 
-        // stage('Terraform Init & Apply') {
-        //     steps {
-        //         dir(env.TF_DIR) {
-        //             sh 'terraform init'
-        //             sh 'terraform validate'
-        //             sh 'terraform apply -auto-approve'
-        //         }
-        //     }
-        // } 
+        stage('Terraform Init & Apply') {
+            steps {
+                dir(env.TF_DIR) {
+                    sh 'terraform init'
+                    sh 'terraform validate'
+                    sh 'terraform destroy -auto-approve'
+                }
+            }
+        } 
 
         stage('Code Stability') {
             environment {
