@@ -3,7 +3,7 @@ pipeline {
     environment {
         NVD_API_KEY = credentials('NVD_API_KEY')
 
-        NEXUS_URL = 'http://192.168.1.40:8081'
+        NEXUS_URL = '192.168.1.40:8081'
         SONAR_URL = 'http://192.168.1.40:9000'
         SONAR_TOKEN = credentials('sonar-token') // Use credentials directly
    
@@ -91,7 +91,7 @@ pipeline {
                 ]],
                 credentialsId: 'nexus-credentials',
                 groupId: 'org',
-                nexusUrl: 'http://192.168.1.40:8081/',
+                nexusUrl: '192.168.1.40:8081',
                 nexusVersion: 'nexus3',
                 protocol: 'http',
                 repository: 'spring3hibernate',
