@@ -1,8 +1,10 @@
 pipeline {
     agent any
     environment {
+        AWS_ACCESS_KEY_ID = credentials('AWS_ACCESS_KEY_ID')
+        AWS_SECRET_ACCESS_KEY = credentials('AWS_SECRET_ACCESS_KEY')
         NVD_API_KEY = credentials('NVD_API_KEY')
-
+        TF_DIR = 'infra'
         NEXUS_URL = '192.168.1.40:8081'
         SONAR_URL = 'http://192.168.1.40:9000'
         SONAR_TOKEN = credentials('sonar-token') // Use credentials directly
@@ -10,6 +12,14 @@ pipeline {
     }
 
     stages {
+
+        stage('Clean Workspace') {
+            steps {
+                deleteDir()
+            }
+        }
+
+
         stage('Checkout') {
             steps {
                 git(
@@ -19,6 +29,17 @@ pipeline {
                 )
             }
         }
+
+        stage('Terraform Init & Apply') {
+            steps {
+                dir(env.TF_DIR) {
+                    sh 'terraform init'
+                    sh 'terraform validate'
+                    sh 'terraform apply -auto-approve'
+                }
+            }
+        } 
+
         stage('Code Stability') {
             environment {
                 JAVA_HOME = '/usr/lib/jvm/java-11-openjdk-amd64'
