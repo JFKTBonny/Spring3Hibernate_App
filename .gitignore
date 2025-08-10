@@ -32,7 +32,7 @@ terraform.rc
 .DS_Store
 Thumbs.db
 
-# Editor-specific files
+# ## Editor-specific files
 .vscode/
 .idea/
 *.swp
