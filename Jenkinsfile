@@ -124,6 +124,7 @@ pipeline {
             environment {
                 JAVA_HOME = '/usr/lib/jvm/java-11-openjdk-amd64'
                 PATH = "${JAVA_HOME}/bin:${env.PATH}"
+                ANSIBLE_HOST_KEY_CHECKING = 'false'
             }
             steps {
                 echo 'Deployment'
@@ -136,6 +137,7 @@ pipeline {
                     sh '''
                         ansible-playbook -i hosts playbook.yaml \
                         --vault-password-file vault_pass.txt \
+                        -e "ansible_ssh_common_args='-o StrictHostKeyChecking=no'" \
                         -vvvv
                     '''
                 }
