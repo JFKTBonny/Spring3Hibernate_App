@@ -1,8 +1,9 @@
 [devservers]
-devserver1 ansible_host=34.234.77.109
+devserver1 ansible_host=34.234.77.109 ansible_user=ubuntu
 
 [devservers:vars]
-ansible_user=ubuntu
+
+ansible_private_key_file=./infra/key.pem
 
 
 
