@@ -127,11 +127,17 @@ pipeline {
             }
             steps {
                 echo 'Deployment'
-                  writeFile file: 'vault_pass.txt', text: env.VAULT_PASS
-                // Uncomment the line below to enable deployment...
-                // sh "ansible-playbook -i hosts playbook.yaml -e nexus_artifact_url=${NEXUS_URL}/repository/spring3hibernate/org/spring3hibernate/v0.1/spring3hibernate-v0.1.war"
-                   sshagent (credentials: ['aws-ssh-key']) {
-                     sh 'ansible-playbook -i hosts playbook.yaml --vault-password-file vault_pass.txt'
+                
+                // Write Ansible Vault password file
+                writeFile file: 'vault_pass.txt', text: env.VAULT_PASS
+                
+                // Run Ansible playbook using Jenkins-managed AWS key
+                sshagent (credentials: ['aws-ssh-key']) {
+                    sh '''
+                        ansible-playbook -i hosts playbook.yaml \
+                        --vault-password-file vault_pass.txt \
+                        -vvvv
+                    '''
                 }
             }
         }
