@@ -2,8 +2,13 @@
 ---
 - hosts: devservers
   become: true
+  vars_files:
+    - vault.yaml
+
   vars:
     nexus_artifact_url: ""   # Provide the actual URL when running
+    
+
 
   tasks:
     - name: Update apt cache
@@ -26,13 +31,30 @@
         state: started
         enabled: yes
 
-    - name: Download the WAR file to Tomcat webapps directory
+    # - name: Download the WAR file to Tomcat webapps directory
+    #   get_url:
+    #     url: "{{ nexus_artifact_url }}"
+    #     dest: /var/lib/tomcat9/webapps/ROOT.war
+    #     owner: tomcat
+    #     group: tomcat
+    #     mode: '0644'
+
+    - name: Download WAR locally from Nexus
       get_url:
-        url: "{{ nexus_artifact_url }}"
+        url: http://192.168.1.40:8081/repository/maven-releases/org/spring3hibernate/v0.1/spring3hibernate-v0.1.war
+        dest: /tmp/spring3hibernate-v0.1.war
+        url_username: "{{ nexus_username }}"
+        url_password: "{{ nexus_password }}"
+      delegate_to: localhost
+      become: false
+
+    - name: Deploy WAR to EC2 Tomcat
+      copy:
+        src: /tmp/spring3hibernate-v0.1.war
         dest: /var/lib/tomcat9/webapps/ROOT.war
         owner: tomcat
         group: tomcat
-        mode: '0644'
+        mode: '0644'    
 
     - name: Restart Tomcat service to deploy the new WAR
       systemd:

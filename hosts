@@ -1,9 +1,9 @@
 [devservers]
-devserver1 ansible_host=3.93.60.125
+devserver1 ansible_host=34.234.77.109
 
 [devservers:vars]
 ansible_user=ubuntu
-ansible_private_key_file=/home/bonny/Spring3Hibernate_App/infra/key.pem
+ansible_private_key_file=./infra/key.pem
 
 
 
