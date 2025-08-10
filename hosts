@@ -1,5 +1,5 @@
 [devservers]
-devserver1 ansible_host=34.234.77.109 ansible_user=ubuntu
+devserver1 ansible_host=54.226.82.129 ansible_user=ubuntu
 
 
 
