@@ -1,5 +1,5 @@
 pipeline {
-    agent { label 'deployment' }
+    agent any
 
     parameters {
         string(name: 'VERSION', defaultValue: 'latest', trim: true)
