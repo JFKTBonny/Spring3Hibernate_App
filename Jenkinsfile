@@ -26,7 +26,7 @@ pipeline {
             steps {
                 sh """
                 sleep 10s
-                NEW_IP=\$(sudo docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' spring3hibernate-${NEW_VERSION})
+                NEW_IP=\$( docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' spring3hibernate-${NEW_VERSION})
                 response=\$(curl --write-out '%{http_code}' --silent --output /dev/null http://\${NEW_IP}:8080)
 
                 if [ "\${response}" != "200" ]; then
