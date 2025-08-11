@@ -38,4 +38,102 @@
 
 
     
-         
+***** QA Env:
+         It mimics the PROD env.Generally used by: - QA engineers...
+                                                   - analysts...
+                                                   - testing professionals...
+          Generally QA engineers perform different types of testing:
+                                                    - Regression testing:
+                                                            tools:
+                                                                 - selenium
+                                                                 - AppSurify
+                                                                 - Webking
+                                                                 - Test drive
+                                                    - BDD(Behavior Driven Development) testing:
+                                                             It is a technique of testing that validates the application behavior...
+                                                             It is an extension of Test Driven Developement(TDD)...
+                                                             BDD test cases get written in the Given-When-Then condition:
+                                                                          - Given(some context)....    example:  Given:  i am signing upfor a free trial
+                                                                          - When(something)...         example:  When:   i provide correct information
+                                                                          - Then(outcome/results)...   example:  Then:   my account is created,and i received the link to download...
+                                                             tools: Cucumber               
+                                                                          
+
+
+                                                    - Security testing:
+                                                             *** Static analysis securiy testing(SAST)[perform in CI..,]
+                                                             *** Dynamic analysis security testing(DAST) [ perform after app deployment with tools like:
+                                                                                                                   1- Zed Attack proxy(ZAP):
+                                                                                                                      open-source tool that analyses security issues and vulnerabilities 
+                                                                                                                      while the app is deployed and running and can be automated...
+                                                                                                                   2- Nikto
+                                                                                                                   3- Accunetix
+                                                                                                                   4- AppScan
+                                                             For security testing ORG generally set up separate Env to avoid security testing to mess up an
+                                                             existing QA Env... ]
+                                                    - API testing:
+                                                             [ sometimes frontend app failure can be due to backend app( generally the API)..
+                                                               The team needs to test the API for its functionality and responsiveness...
+                                                               tools:
+                                                                  - Simple Object Access Protocol(SOAP):
+                                                                     It is an open-source tool to test the standard and measures of APIs...
+                                                                     It works with all kind of APIs and their messaging protocols...
+                                                                     It provides a simple interface for testing and can be used by both technical and non technical people...   ]
+                                                    - Performance testing: 
+                                                                It is the method of testing software's: - responsiveness
+                                                                                                        - scalability
+                                                                                                        - reliability
+                                                                                                        - stability
+                                                                                                        - and resources consumption under high loads...  
+                                                                
+                                                                the team create the performance testing env separately to test the app and infrastructure performance
+                                                                and swich off the env when testing complete...
+                                                                Load/Stress testing are performed on apps...
+                                                                tools used:
+                                                                           - Load ninja
+                                                                           - Apache jmeter:
+                                                                                 graphical and open-source app built entirely on java...
+                                                                                 It is made to evaluate and assess the functional behavior of web app 
+                                                                                 and wide range of services during load...
+                                                                                 It is currently valid in:
+                                                                                                 *** functional testing
+                                                                                                 *** testing JDBC databases connections
+                                                                                                 *** web services
+                                                                                                 *** generic TCP
+                                                                                                 *** and OS native processes 
+                                                                           - Load runner
+                                                                           - Locust   
+
+                                                      - Business testing env:
+                                                                           1- User Acceptance Testing(UAT):
+                                                      software is tested from the end-user perpective in the real world
+                                                      by the intended consummers..
+                                                      setup as separate env and identical to PROD env...
+                                                      This is the last software testing phase before release a software/app...
+                                                      testing phases:
+                                                                  -  Alpha testing
+                                                                  -  Beta testing      
+
+***** Deployement Strategies:   are various ways of deploying apps based on used cases...
+              examples: - Normal: we simple remove version A and deploy version B on n the app server with downtime...
+                        - Rolling/Ramped:
+                            Both versions(A and B) are deployed...the transition from A to B is made gradually...
+                            The version A instances will be running behind the LB, and 1 instance of version B will also be deployed...
+                            When the version B is ready to serve the traffic, it will start receiving the traffic and 1 instance of version A 
+                            will be removed from the LB and shutdown...
+                            This process will continue until all instances of version B are rolled out....
+                            This strategy generally depends on 2 factors:
+                                            1- Max Surge: number of instances of the new version that are to be added in the current capacity...
+                                            2- Max Unavailable: number of Unavailable instances of the older version in the rolling update procedure...
+                           [ Pros: no downtime during transition... Cons: the transition is time-consumming....]                
+                        - Blue Green:
+                                    version B is deployed alongside version A with the exact number of instances and resources...
+                                    once the testing of the new version is completed successfully , the traffic is switched from A to B on LB level... 
+                                    [ Pros: it is the faster strategy with no downtime...Cons(Drawbacks): having 2 identical infrastrures running at the same is 
+                                    too expensive...  ]
+                        - Canary :
+                               The Canary deploy generally shifts the prod traffic from A to B to live Users...
+                               A percentage of the traffic(example: 90%) is served(through LB) to version A and the rest(example: 10%) to version B,
+                               while their performances are monitored...this performance monitoring helps decide if rollout or rollback should be right move... 
+
+

@@ -27,7 +27,7 @@ pipeline {
                     agent {
                         docker {
                             args "-v ${HOME}/.m2:/root/.m2"
-                            image 'opstreedevops/maven:java8'
+                            image 'maven:3.8.5-jdk-11-slim'
                         }
                     }
                     steps {
@@ -49,7 +49,7 @@ pipeline {
             agent {
                 docker {
                     args "-v ${HOME}/.m2:/root/.m2"
-                    image 'opstreedevops/maven:java8'
+                    image 'maven:3.8.5-jdk-11-slim'
                 }
             }
             steps {
@@ -63,7 +63,7 @@ pipeline {
             agent {
                 docker {
                     args "-v ${HOME}/.m2:/root/.m2"
-                    image 'opstreedevops/maven:java8'
+                    image 'maven:3.8.5-jdk-11-slim'
                 }
             }
             steps {
@@ -88,7 +88,7 @@ pipeline {
                     agent {
                         docker {
                             args "-v ${HOME}/.m2:/root/.m2"
-                            image 'opstreedevops/maven:java8'
+                            image 'maven:3.8.5-jdk-11-slim'
                         }
                     }
                     steps {
