@@ -1,126 +1,60 @@
 pipeline {
-    agent any
+    agent { label 'deployment' }
+
+    parameters {
+        string(name: 'OLDER_VERSION', defaultValue: 'latest', trim: true)
+        string(name: 'NEW_VERSION', defaultValue: 'latest', trim: true)
+    }
+
     stages {
-        stage('Clean Workspace') {
+        stage('Cloning codebase for Security Environment Deployment') {
             steps {
-                deleteDir()
+                checkout scm
             }
         }
 
-        stage('Code Checkout') {
+        stage('Deploying the ${NEW_VERSION} on Security Environment') {
             steps {
-                git credentialsId: 'jenkins-git', branch: 'main', url: 'git@github.com:JFKTBonny/Spring3Hibernate_App.git'
+                sh """
+                sudo docker run -itd --name spring3hibernate-${NEW_VERSION} \
+                    santonix/spring3hibernate:${NEW_VERSION}
+                """
             }
         }
 
-        stage('Code Stability | Build Image') {
+        stage('Validating the ${NEW_VERSION}') {
             steps {
-                script {
-                    docker.build("santonix/spring3hibernate:${env.BUILD_ID}")
-                }
+                sh """
+                sleep 10s
+                NEW_IP=\$(sudo docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' spring3hibernate-${NEW_VERSION})
+                response=\$(curl --write-out '%{http_code}' --silent --output /dev/null http://\${NEW_IP}:8080)
+
+                if [ "\${response}" != "200" ]; then
+                    echo "Application is not working fine"
+                    exit 1
+                fi
+                """
             }
         }
 
-        stage('Code Quality | Checkstyle | Hadolint') {
-            parallel {
-                stage('Checkstyle') {
-                    agent {
-                        docker {
-                            args "-v ${HOME}/.m2:/root/.m2"
-                            image 'maven:3.8.5-jdk-11-slim'
-                        }
-                    }
-                    steps {
-                        git credentialsId: 'jenkins-git',branch: 'main', url: 'git@github.com:JFKTBonny/Spring3Hibernate_App.git'
-                        sh 'mvn checkstyle:checkstyle'
-                        recordIssues(tools: [checkStyle(pattern: '**/checkstyle-result.xml')])
-                    }
-                }
-                stage('Hadolint') {
-                    steps {
-                        sh 'hadolint Dockerfile --no-fail -f json | tee -a hadolint.json'
-                        recordIssues(tools: [hadoLint(pattern: 'hadolint.json')])
-                    }
-                }
-            }
-        }
-
-        stage('Unit Testing') {
-            agent {
-                docker {
-                    args "-v ${HOME}/.m2:/root/.m2"
-                    image 'maven:3.8.5-jdk-11-slim'
-                }
-            }
+        stage('Add the new version to load balancer') {
             steps {
-                git credentialsId: 'jenkins-git',branch: 'main', url: 'git@github.com:JFKTBonny/Spring3Hibernate_App.git'
-                sh 'mvn test'
-                recordIssues(tools: [junitParser(pattern: 'target/surefire-reports/*.xml')])
+                sh """
+                sudo docker rm -f spring3hibernate-${NEW_VERSION} || true
+                sudo docker run -itd --name spring3hibernate-${NEW_VERSION} \
+                    --label traefik.enable=true \
+                    --label 'traefik.http.routers.spring3hibernate.rule=Host(`qa-spring.santonix.com`)' \
+                    --label traefik.port=8080 \
+                    santonix/spring3hibernate:${NEW_VERSION}
+                """
             }
         }
 
-        stage('Code Coverage') {
-            agent {
-                docker {
-                    args "-v ${HOME}/.m2:/root/.m2"
-                    image 'maven:3.8.5-jdk-11-slim'
-                }
-            }
+        stage('Removing old version') {
             steps {
-                git credentialsId: 'jenkins-git', branch: 'main',url: 'git@github.com:JFKTBonny/Spring3Hibernate_App.git'
-                sh 'mvn cobertura:cobertura'
-                cobertura autoUpdateHealth: false, autoUpdateStability: false,
-                         coberturaReportFile: '**/target/site/cobertura/coverage.xml',
-                         conditionalCoverageTargets: '70,0,0',
-                         failUnhealthy: false, failUnstable: false,
-                         lineCoverageTargets: '80,0,0',
-                         maxNumberOfBuilds: 0,
-                         methodCoverageTargets: '80,0,0',
-                         onlyStable: false,
-                         sourceEncoding: 'ASCII',
-                         zoomCoverageChart: false
-            }
-        }
-
-        stage('Security Testing | OWASP | Snyk') {
-            parallel {
-                stage('Dependency Check') {
-                    agent {
-                        docker {
-                            args "-v ${HOME}/.m2:/root/.m2"
-                            image 'maven:3.8.5-jdk-11-slim'
-                        }
-                    }
-                    steps {
-                        git credentialsId: 'jenkins-git',branch: 'main', url: 'git@github.com:JFKTBonny/Spring3Hibernate_App.git'
-                        sh 'mvn org.owasp:dependency-check-maven:check'
-                        publishHTML([
-                            allowMissing: false,
-                            alwaysLinkToLastBuild: true,
-                            keepAll: true,
-                            reportDir: 'target',
-                            reportFiles: 'dependency-check-report.html',
-                            reportName: 'Dependency Check',
-                            reportTitles: 'Spring3hibernate'
-                        ])
-                    }
-                }
-                stage('Container Scan') {
-                    steps {
-                        echo 'Testing...'
-                        snykSecurity(
-                            snykInstallation: 'snyk',
-                            snykTokenId: 'Snyk-API-token',
-                            additionalArguments: "--docker santonix/spring3hibernate:${env.BUILD_ID}",
-                            failOnError: false
-                        )
-                    }
-                }
-                stage('Clean Workspace') {
-                    steps {
-                        deleteDir()
-                    }
-                }
+                sh """
+                sudo docker rm -f spring3hibernate-${OLDER_VERSION} || true
+                """
             }
         }
     }
