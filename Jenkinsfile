@@ -26,7 +26,7 @@ pipeline {
         stage('Deploy the Canary and Baseline versions on PROD Environment') {
             steps {
                 sh """
-                sudo docker run -itd --name spring3hibernate-canary \
+                 docker run -itd --name spring3hibernate-canary \
                     --label traefik.enable=true \
                     --label 'traefik.http.routers.spring3hibernate-canary.rule=Host(`PROD
         -spring.santonix.com`)' \
@@ -35,7 +35,7 @@ pipeline {
                     --label traefik.backend=app_weighted \
                    santonix/spring3hibernate:${CANARY_VERSION}
 
-                sudo docker run -itd --name spring3hibernate-baseline \
+                 docker run -itd --name spring3hibernate-baseline \
                     --label traefik.enable=true \
                     --label 'traefik.http.routers.spring3hibernate-baseline.rule=Host(`PROD
         -spring.santonix.com`)' \
@@ -60,26 +60,24 @@ pipeline {
                     if (returnValue == 'Rollback') {
                         stage('Rollback complete traffic to Baseline') {
                             sh """
-                            sudo docker rm -f spring3hibernate-baseline || true
-                            sudo docker run -itd --name spring3hibernate-baseline \
+                             docker rm -f spring3hibernate-baseline || true
+                             docker run -itd --name spring3hibernate-baseline \
                                 --label traefik.enable=true \
-                                --label 'traefik.http.routers.spring3hibernate-baseline.rule=Host(`PROD
-                    -spring.santonix.com`)' \
+                                --label 'traefik.http.routers.spring3hibernate-baseline.rule=Host('PROD-spring.santonix.com')' \
                                 --label traefik.port=8080 \
                                 --label traefik.weight=100 \
                                 --label traefik.backend=app_weighted \
                                santonix/spring3hibernate:${BASELINE_VERSION}
-                            sudo docker rm -f spring3hibernate-canary || true
+                             docker rm -f spring3hibernate-canary || true
                             """
                         }
                     } else if (returnValue == 'Proceed') {
                         stage('Shifting all traffic to Canary') {
                             sh """
-                            sudo docker rm -f spring3hibernate-canary || true
-                            sudo docker run -itd --name spring3hibernate-canary \
+                             docker rm -f spring3hibernate-canary || true
+                             docker run -itd --name spring3hibernate-canary \
                                 --label traefik.enable=true \
-                                --label 'traefik.http.routers.spring3hibernate-baseline.rule=Host(`PROD
-                    -spring.santonix.com`)' \
+                                --label 'traefik.http.routers.spring3hibernate-baseline.rule=Host('PROD-spring.santonix.com')' \
                                 --label traefik.port=8080 \
                                 --label traefik.weight=100 \
                                 --label traefik.backend=app_weighted \
