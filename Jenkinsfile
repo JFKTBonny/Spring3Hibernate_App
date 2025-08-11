@@ -9,7 +9,7 @@ pipeline {
 
         stage('Code Checkout') {
             steps {
-                git credentialsId: 'jenkins-git', url: 'git@github.com:JFKTBonny/Spring3Hibernate_App.git'
+                git credentialsId: 'jenkins-git', branch: 'main', url: 'git@github.com:JFKTBonny/Spring3Hibernate_App.git'
             }
         }
 
@@ -31,7 +31,7 @@ pipeline {
                         }
                     }
                     steps {
-                        git credentialsId: 'jenkins-git', url: 'git@github.com:JFKTBonny/Spring3Hibernate_App.git'
+                        git credentialsId: 'jenkins-git',branch: 'main', url: 'git@github.com:JFKTBonny/Spring3Hibernate_App.git'
                         sh 'mvn checkstyle:checkstyle'
                         recordIssues(tools: [checkStyle(pattern: '**/checkstyle-result.xml')])
                     }
@@ -53,7 +53,7 @@ pipeline {
                 }
             }
             steps {
-                git credentialsId: 'jenkins-git', url: 'git@github.com:JFKTBonny/Spring3Hibernate_App.git'
+                git credentialsId: 'jenkins-git',branch: 'main', url: 'git@github.com:JFKTBonny/Spring3Hibernate_App.git'
                 sh 'mvn test'
                 recordIssues(tools: [junitParser(pattern: 'target/surefire-reports/*.xml')])
             }
@@ -67,7 +67,7 @@ pipeline {
                 }
             }
             steps {
-                git credentialsId: 'jenkins-git', url: 'git@github.com:JFKTBonny/Spring3Hibernate_App.git'
+                git credentialsId: 'jenkins-git', branch: 'main',url: 'git@github.com:JFKTBonny/Spring3Hibernate_App.git'
                 sh 'mvn cobertura:cobertura'
                 cobertura autoUpdateHealth: false, autoUpdateStability: false,
                          coberturaReportFile: '**/target/site/cobertura/coverage.xml',
@@ -92,7 +92,7 @@ pipeline {
                         }
                     }
                     steps {
-                        git credentialsId: 'jenkins-git', url: 'git@github.com:JFKTBonny/Spring3Hibernate_App.git'
+                        git credentialsId: 'jenkins-git',branch 'main', url: 'git@github.com:JFKTBonny/Spring3Hibernate_App.git'
                         sh 'mvn org.owasp:dependency-check-maven:check'
                         publishHTML([
                             allowMissing: false,
