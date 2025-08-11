@@ -26,7 +26,7 @@ pipeline {
         stage('Deploying the Green version on PT Environment') {
             steps {
                 sh """
-                sudo docker run -itd --name spring3hibernate-green \
+                 docker run -itd --name spring3hibernate-green \
                     --label traefik.enable=true \
                     --label 'traefik.http.routers.spring3hibernate.rule=Host(`green-pt-spring.santonix.com`)' \
                     --label traefik.port=8080 \
@@ -74,8 +74,8 @@ pipeline {
                     } else if (returnValue == 'Proceed') {
                         stage('Live the traffic') {
                             sh """
-                            sudo docker rm -f spring3hibernate-green
-                            sudo docker run -itd --name spring3hibernate-blue \
+                             docker rm -f spring3hibernate-green
+                             docker run -itd --name spring3hibernate-blue \
                                 --label traefik.enable=true \
                                 --label 'traefik.http.routers.spring3hibernate.rule=Host(`blue-pt-spring.santonix.com`)' \
                                 --label traefik.port=8080 \
