@@ -1,125 +1,44 @@
 pipeline {
-    agent any
+    agent { label 'deployment' }
+
+    parameters {
+        string(
+            name: 'GREEN_VERSION',
+            defaultValue: 'latest',
+            trim: true,
+            description: 'Green is newer version'
+        )
+        string(
+            name: 'BLUE_VERSION',
+            defaultValue: 'latest',
+            trim: true,
+            description: 'Blue is older version'
+        )
+    }
+
     stages {
-        stage('Clean Workspace') {
+        stage('Cloning codebase for Security Environment Deployment') {
             steps {
-                deleteDir()
+                checkout scm
             }
         }
 
-        stage('Code Checkout') {
+        stage('Deploying the Green version on PT Environment') {
             steps {
-                git credentialsId: 'jenkins-git', branch: 'main', url: 'git@github.com:JFKTBonny/Spring3Hibernate_App.git'
+                sh """
+                sudo docker run -itd --name spring3hibernate-green \
+                    --label traefik.enable=true \
+                    --label 'traefik.http.routers.spring3hibernate.rule=Host(`green-pt-spring.opstree.com`)' \
+                    --label traefik.port=8080 \
+                    opstree/spring3hibernate:${GREEN_VERSION}
+                """
             }
         }
 
-        stage('Code Stability | Build Image') {
+        stage('Pause pipeline for Green version validation') {
             steps {
                 script {
-                    docker.build("santonix/spring3hibernate:${env.BUILD_ID}")
-                }
-            }
-        }
-
-        stage('Code Quality | Checkstyle | Hadolint') {
-            parallel {
-                stage('Checkstyle') {
-                    agent {
-                        docker {
-                            args "-v ${HOME}/.m2:/root/.m2"
-                            image 'maven:3.8.5-jdk-11-slim'
-                        }
-                    }
-                    steps {
-                        git credentialsId: 'jenkins-git',branch: 'main', url: 'git@github.com:JFKTBonny/Spring3Hibernate_App.git'
-                        sh 'mvn checkstyle:checkstyle'
-                        recordIssues(tools: [checkStyle(pattern: '**/checkstyle-result.xml')])
-                    }
-                }
-                stage('Hadolint') {
-                    steps {
-                        sh 'hadolint Dockerfile --no-fail -f json | tee -a hadolint.json'
-                        recordIssues(tools: [hadoLint(pattern: 'hadolint.json')])
-                    }
-                }
-            }
-        }
-
-        stage('Unit Testing') {
-            agent {
-                docker {
-                    args "-v ${HOME}/.m2:/root/.m2"
-                    image 'maven:3.8.5-jdk-11-slim'
-                }
-            }
-            steps {
-                git credentialsId: 'jenkins-git',branch: 'main', url: 'git@github.com:JFKTBonny/Spring3Hibernate_App.git'
-                sh 'mvn test'
-                recordIssues(tools: [junitParser(pattern: 'target/surefire-reports/*.xml')])
-            }
-        }
-
-        stage('Code Coverage') {
-            agent {
-                docker {
-                    args "-v ${HOME}/.m2:/root/.m2"
-                    image 'maven:3.8.5-jdk-11-slim'
-                }
-            }
-            steps {
-                git credentialsId: 'jenkins-git', branch: 'main',url: 'git@github.com:JFKTBonny/Spring3Hibernate_App.git'
-                sh 'mvn cobertura:cobertura'
-                cobertura autoUpdateHealth: false, autoUpdateStability: false,
-                         coberturaReportFile: '**/target/site/cobertura/coverage.xml',
-                         conditionalCoverageTargets: '70,0,0',
-                         failUnhealthy: false, failUnstable: false,
-                         lineCoverageTargets: '80,0,0',
-                         maxNumberOfBuilds: 0,
-                         methodCoverageTargets: '80,0,0',
-                         onlyStable: false,
-                         sourceEncoding: 'ASCII',
-                         zoomCoverageChart: false
-            }
-        }
-
-        stage('Security Testing | OWASP | Snyk') {
-            parallel {
-                stage('Dependency Check') {
-                    agent {
-                        docker {
-                            args "-v ${HOME}/.m2:/root/.m2"
-                            image 'maven:3.8.5-jdk-11-slim'
-                        }
-                    }
-                    steps {
-                        git credentialsId: 'jenkins-git',branch: 'main', url: 'git@github.com:JFKTBonny/Spring3Hibernate_App.git'
-                        sh 'mvn org.owasp:dependency-check-maven:check'
-                        publishHTML([
-                            allowMissing: false,
-                            alwaysLinkToLastBuild: true,
-                            keepAll: true,
-                            reportDir: 'target',
-                            reportFiles: 'dependency-check-report.html',
-                            reportName: 'Dependency Check',
-                            reportTitles: 'Spring3hibernate'
-                        ])
-                    }
-                }
-                stage('Container Scan') {
-                    steps {
-                        echo 'Testing...'
-                        snykSecurity(
-                            snykInstallation: 'snyk',
-                            snykTokenId: 'Snyk-API-token',
-                            additionalArguments: "--docker santonix/spring3hibernate:${env.BUILD_ID}",
-                            failOnError: false
-                        )
-                    }
-                }
-                stage('Clean Workspace') {
-                    steps {
-                        deleteDir()
-                    }
+                    input(message: 'Do you want to proceed further?')
                 }
             }
         }
