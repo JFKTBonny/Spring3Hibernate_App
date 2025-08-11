@@ -1,11 +1,10 @@
 pipeline {
     agent any
     tools {
-            jdk: 'jdk17'
-            maven: 'maven3'
-        }
+        jdk 'jdk17'
+        maven 'maven3'
+    }
     stages {
-        
         stage('Clean Workspace') {
             steps {
                 deleteDir()
@@ -18,25 +17,10 @@ pipeline {
             }
         }
 
-        // stage('Code Stability | Build Image') {
-        //     steps {
-        //         script {
-        //             docker.build("santonix/spring3hibernate:${env.BUILD_ID}")
-        //         }
-        //     }
-        // }
-
         stage('Code Quality | Checkstyle | Hadolint') {
             parallel {
                 stage('Checkstyle') {
-                    // agent {
-                    //     docker {
-                    //         args "-v ${HOME}/.m2:/root/.m2"
-                    //         image 'maven:3.8.5-jdk-11-slim'
-                    //     }
-                    }
                     steps {
-                        git credentialsId: 'jenkins-git',branch: 'main', url: 'git@github.com:JFKTBonny/Spring3Hibernate_App.git'
                         sh 'mvn checkstyle:checkstyle'
                         recordIssues(tools: [checkStyle(pattern: '**/checkstyle-result.xml')])
                     }
@@ -51,28 +35,14 @@ pipeline {
         }
 
         stage('Unit Testing') {
-            // agent {
-            //     docker {
-            //         args "-v ${HOME}/.m2:/root/.m2"
-            //         image 'maven:3.8.5-jdk-11-slim'
-            //     }
-            // }
             steps {
-                git credentialsId: 'jenkins-git',branch: 'main', url: 'git@github.com:JFKTBonny/Spring3Hibernate_App.git'
                 sh 'mvn test'
                 recordIssues(tools: [junitParser(pattern: 'target/surefire-reports/*.xml')])
             }
         }
 
         stage('Code Coverage') {
-            // agent {
-            //     docker {
-            //         args "-v ${HOME}/.m2:/root/.m2"
-            //         image 'maven:3.8.5-jdk-11-slim'
-            //     }
-            // }
             steps {
-                git credentialsId: 'jenkins-git', branch: 'main',url: 'git@github.com:JFKTBonny/Spring3Hibernate_App.git'
                 sh 'mvn cobertura:cobertura'
                 cobertura autoUpdateHealth: false, autoUpdateStability: false,
                          coberturaReportFile: '**/target/site/cobertura/coverage.xml',
@@ -90,14 +60,7 @@ pipeline {
         stage('Security Testing | OWASP | Snyk') {
             parallel {
                 stage('Dependency Check') {
-                    // agent {
-                    //     docker {
-                    //         args "-v ${HOME}/.m2:/root/.m2"
-                    //         image 'maven:3.8.5-jdk-11-slim'
-                    //     }
-                    // }
                     steps {
-                        git credentialsId: 'jenkins-git',branch: 'main', url: 'git@github.com:JFKTBonny/Spring3Hibernate_App.git'
                         sh 'mvn org.owasp:dependency-check-maven:check'
                         publishHTML([
                             allowMissing: false,
@@ -112,21 +75,17 @@ pipeline {
                 }
                 stage('Container Scan') {
                     steps {
-                        echo 'Testing...'
-                        snykSecurity(
-                            snykInstallation: 'snyk',
-                            snykTokenId: 'Snyk-API-token',
-                            additionalArguments: "--docker santonix/spring3hibernate:${env.BUILD_ID}",
-                            failOnError: false
-                        )
-                    }
-                }
-                stage('Clean Workspace') {
-                    steps {
-                        deleteDir()
+                        echo 'Skipping Snyk scan because image build is not included currently'
+                        // Uncomment and adjust below after you build your Docker image
+                        // snykSecurity(
+                        //    snykInstallation: 'snyk',
+                        //    snykTokenId: 'Snyk-API-token',
+                        //    additionalArguments: "--docker santonix/spring3hibernate:${env.BUILD_ID}",
+                        //    failOnError: false
+                        // )
                     }
                 }
             }
         }
     }
-
+}
