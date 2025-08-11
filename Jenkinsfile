@@ -16,7 +16,7 @@ pipeline {
         stage('Deploying the ${NEW_VERSION} on Security Environment') {
             steps {
                 sh """
-                sudo docker run -itd --name spring3hibernate-${NEW_VERSION} \
+                 docker run -itd --name spring3hibernate-${NEW_VERSION} \
                     santonix/spring3hibernate:${NEW_VERSION}
                 """
             }
@@ -40,8 +40,8 @@ pipeline {
         stage('Add the new version to load balancer') {
             steps {
                 sh """
-                sudo docker rm -f spring3hibernate-${NEW_VERSION} || true
-                sudo docker run -itd --name spring3hibernate-${NEW_VERSION} \
+                 docker rm -f spring3hibernate-${NEW_VERSION} || true
+                 docker run -itd --name spring3hibernate-${NEW_VERSION} \
                     --label traefik.enable=true \
                     --label 'traefik.http.routers.spring3hibernate.rule=Host(`qa-spring.santonix.com`)' \
                     --label traefik.port=8080 \
@@ -53,7 +53,7 @@ pipeline {
         stage('Removing old version') {
             steps {
                 sh """
-                sudo docker rm -f spring3hibernate-${OLDER_VERSION} || true
+                 docker rm -f spring3hibernate-${OLDER_VERSION} || true
                 """
             }
         }
