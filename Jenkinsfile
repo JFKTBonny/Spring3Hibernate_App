@@ -1,124 +1,87 @@
 pipeline {
-    agent any
+    agent { label 'deployment' }
+
+    parameters {
+        string(
+            name: 'BASELINE_VERSION',
+            defaultValue: 'latest',
+            trim: true,
+            description: 'Older version'
+        )
+        string(
+            name: 'CANARY_VERSION',
+            defaultValue: 'latest',
+            trim: true,
+            description: 'Newer version'
+        )
+    }
+
     stages {
-        stage('Clean Workspace') {
+        stage('Cloning codebase for UAT Environment Deployment') {
             steps {
-                deleteDir()
+                checkout scm
             }
         }
 
-        stage('Code Checkout') {
+        stage('Deploy the Canary and Baseline versions on UAT Environment') {
             steps {
-                git credentialsId: 'jenkins-git', branch: 'main', url: 'git@github.com:JFKTBonny/Spring3Hibernate_App.git'
+                sh """
+                sudo docker run -itd --name spring3hibernate-canary \
+                    --label traefik.enable=true \
+                    --label 'traefik.http.routers.spring3hibernate-canary.rule=Host(`uat-spring.santonix.com`)' \
+                    --label traefik.port=8080 \
+                    --label traefik.weight=10 \
+                    --label traefik.backend=app_weighted \
+                   santonix/spring3hibernate:${CANARY_VERSION}
+
+                sudo docker run -itd --name spring3hibernate-baseline \
+                    --label traefik.enable=true \
+                    --label 'traefik.http.routers.spring3hibernate-baseline.rule=Host(`uat-spring.santonix.com`)' \
+                    --label traefik.port=8080 \
+                    --label traefik.weight=90 \
+                    --label traefik.backend=app_weighted \
+                   santonix/spring3hibernate:${BASELINE_VERSION}
+                """
             }
         }
 
-        stage('Code Stability | Build Image') {
+        stage('Validation for Application') {
             steps {
                 script {
-                    docker.build("santonix/spring3hibernate:${env.BUILD_ID}")
-                }
-            }
-        }
+                    def returnValue = input(
+                        message: 'Do you want to proceed further?',
+                        parameters: [
+                            choice(name: 'action', choices: ['Rollback', 'Proceed'])
+                        ]
+                    )
 
-        stage('Code Quality | Checkstyle | Hadolint') {
-            parallel {
-                stage('Checkstyle') {
-                    agent {
-                        docker {
-                            args "-v ${HOME}/.m2:/root/.m2"
-                            image 'maven:3.8.5-jdk-11-slim'
+                    if (returnValue == 'Rollback') {
+                        stage('Rollback complete traffic to Baseline') {
+                            sh """
+                            sudo docker rm -f spring3hibernate-baseline || true
+                            sudo docker run -itd --name spring3hibernate-baseline \
+                                --label traefik.enable=true \
+                                --label 'traefik.http.routers.spring3hibernate-baseline.rule=Host(`uat-spring.santonix.com`)' \
+                                --label traefik.port=8080 \
+                                --label traefik.weight=100 \
+                                --label traefik.backend=app_weighted \
+                               santonix/spring3hibernate:${BASELINE_VERSION}
+                            sudo docker rm -f spring3hibernate-canary || true
+                            """
                         }
-                    }
-                    steps {
-                        git credentialsId: 'jenkins-git',branch: 'main', url: 'git@github.com:JFKTBonny/Spring3Hibernate_App.git'
-                        sh 'mvn checkstyle:checkstyle'
-                        recordIssues(tools: [checkStyle(pattern: '**/checkstyle-result.xml')])
-                    }
-                }
-                stage('Hadolint') {
-                    steps {
-                        sh 'hadolint Dockerfile --no-fail -f json | tee -a hadolint.json'
-                        recordIssues(tools: [hadoLint(pattern: 'hadolint.json')])
-                    }
-                }
-            }
-        }
-
-        stage('Unit Testing') {
-            agent {
-                docker {
-                    args "-v ${HOME}/.m2:/root/.m2"
-                    image 'maven:3.8.5-jdk-11-slim'
-                }
-            }
-            steps {
-                git credentialsId: 'jenkins-git',branch: 'main', url: 'git@github.com:JFKTBonny/Spring3Hibernate_App.git'
-                sh 'mvn test'
-                recordIssues(tools: [junitParser(pattern: 'target/surefire-reports/*.xml')])
-            }
-        }
-
-        stage('Code Coverage') {
-            agent {
-                docker {
-                    args "-v ${HOME}/.m2:/root/.m2"
-                    image 'maven:3.8.5-jdk-11-slim'
-                }
-            }
-            steps {
-                git credentialsId: 'jenkins-git', branch: 'main',url: 'git@github.com:JFKTBonny/Spring3Hibernate_App.git'
-                sh 'mvn cobertura:cobertura'
-                cobertura autoUpdateHealth: false, autoUpdateStability: false,
-                         coberturaReportFile: '**/target/site/cobertura/coverage.xml',
-                         conditionalCoverageTargets: '70,0,0',
-                         failUnhealthy: false, failUnstable: false,
-                         lineCoverageTargets: '80,0,0',
-                         maxNumberOfBuilds: 0,
-                         methodCoverageTargets: '80,0,0',
-                         onlyStable: false,
-                         sourceEncoding: 'ASCII',
-                         zoomCoverageChart: false
-            }
-        }
-
-        stage('Security Testing | OWASP | Snyk') {
-            parallel {
-                stage('Dependency Check') {
-                    agent {
-                        docker {
-                            args "-v ${HOME}/.m2:/root/.m2"
-                            image 'maven:3.8.5-jdk-11-slim'
+                    } else if (returnValue == 'Proceed') {
+                        stage('Shifting all traffic to Canary') {
+                            sh """
+                            sudo docker rm -f spring3hibernate-canary || true
+                            sudo docker run -itd --name spring3hibernate-canary \
+                                --label traefik.enable=true \
+                                --label 'traefik.http.routers.spring3hibernate-baseline.rule=Host(`uat-spring.santonix.com`)' \
+                                --label traefik.port=8080 \
+                                --label traefik.weight=100 \
+                                --label traefik.backend=app_weighted \
+                               santonix/spring3hibernate:${CANARY_VERSION}
+                            """
                         }
-                    }
-                    steps {
-                        git credentialsId: 'jenkins-git',branch: 'main', url: 'git@github.com:JFKTBonny/Spring3Hibernate_App.git'
-                        sh 'mvn org.owasp:dependency-check-maven:check'
-                        publishHTML([
-                            allowMissing: false,
-                            alwaysLinkToLastBuild: true,
-                            keepAll: true,
-                            reportDir: 'target',
-                            reportFiles: 'dependency-check-report.html',
-                            reportName: 'Dependency Check',
-                            reportTitles: 'Spring3hibernate'
-                        ])
-                    }
-                }
-                stage('Container Scan') {
-                    steps {
-                        echo 'Testing...'
-                        snykSecurity(
-                            snykInstallation: 'snyk',
-                            snykTokenId: 'Snyk-API-token',
-                            additionalArguments: "--docker santonix/spring3hibernate:${env.BUILD_ID}",
-                            failOnError: false
-                        )
-                    }
-                }
-                stage('Clean Workspace') {
-                    steps {
-                        deleteDir()
                     }
                 }
             }
