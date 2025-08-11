@@ -1,0 +1,41 @@
+#### DOCKER
+       - dockee client
+       - docker daemon
+       - docker registry
+       - docker image
+            . 2 ways to create images inside Docker : "" Docker commits  and Dockerfile""
+               *** docker commit <container-id>
+               *** docker build -t <image_name>:<image_tags> -f Dockerfile  
+            .  Dockerfile:
+                  contains all commands  a user can run on cli to assemble an image...
+                  * Dockerfile content example:
+                        FROM naven:latest
+                        COPY ./usr/src/mymaven
+                        WORKDIR /usr/src/mymaven/
+                        RUN mvn clean install
+                        RUN mvn clean package 
+                        ENTRYPOINT ["java", "-jar"]
+                        CMD ["/usr/src/mymaven/app.jar"]
+
+                        FROM:       is to call a base image from the registry; it should be a valid image name.
+                        COPY:       is a step that is used to copy content from the local filesystem to an image.
+                        WORKDIR:    is used to set the working directory in which other Dockerfile steps will be performed.
+                        RUN:        is to execute any command inside the docker image.
+                        ENTRYPOINT: allows us to run executable files or commands, like Java and node. 
+                                    It is the main command that allows a Docker container to run a process.
+                        CMD:        is an instruction that can be executed once after the Dockerfile is built,
+                                    generally, people use CMD to pass arguments to ENTRYPOINT.
+                        USER:       used to change the user of the docker image. 
+                                    whenever a container is started,it will be started with the defined user...
+                                    If this parameter is not defined, the default root user will be used...
+
+                . Multistage Dockerfile:
+                                        
+
+
+            . Docker build:
+                   allows users to automate the execution of several commands at once using multiple command-line instructions...
+
+
+    
+         
