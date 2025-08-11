@@ -28,9 +28,9 @@ pipeline {
                 sh """
                 sudo docker run -itd --name spring3hibernate-green \
                     --label traefik.enable=true \
-                    --label 'traefik.http.routers.spring3hibernate.rule=Host(`green-pt-spring.opstree.com`)' \
+                    --label 'traefik.http.routers.spring3hibernate.rule=Host(`green-pt-spring.santonix.com`)' \
                     --label traefik.port=8080 \
-                    opstree/spring3hibernate:${GREEN_VERSION}
+                    santonix/spring3hibernate:${GREEN_VERSION}
                 """
             }
         }
@@ -77,9 +77,9 @@ pipeline {
                             sudo docker rm -f spring3hibernate-green
                             sudo docker run -itd --name spring3hibernate-blue \
                                 --label traefik.enable=true \
-                                --label 'traefik.http.routers.spring3hibernate.rule=Host(`blue-pt-spring.opstree.com`)' \
+                                --label 'traefik.http.routers.spring3hibernate.rule=Host(`blue-pt-spring.santonix.com`)' \
                                 --label traefik.port=8080 \
-                                opstree/spring3hibernate:${GREEN_VERSION}
+                                santonix/spring3hibernate:${GREEN_VERSION}
                             """
                         }
                     }
