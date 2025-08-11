@@ -28,19 +28,19 @@ pipeline {
                 sh """
                 sudo docker run -itd --name spring3hibernate-canary \
                     --label traefik.enable=true \
-                    --label 'traefik.http.routers.spring3hibernate-canary.rule=Host(`uat-spring.opstree.com`)' \
+                    --label 'traefik.http.routers.spring3hibernate-canary.rule=Host(`uat-spring.santonix.com`)' \
                     --label traefik.port=8080 \
                     --label traefik.weight=10 \
                     --label traefik.backend=app_weighted \
-                  opstree/spring3hibernate:${CANARY_VERSION}
+                 santonix/spring3hibernate:${CANARY_VERSION}
 
                 sudo docker run -itd --name spring3hibernate-baseline \
                     --label traefik.enable=true \
-                    --label 'traefik.http.routers.spring3hibernate-baseline.rule=Host(`uat-spring.opstree.com`)' \
+                    --label 'traefik.http.routers.spring3hibernate-baseline.rule=Host(`uat-spring.santonix.com`)' \
                     --label traefik.port=8080 \
                     --label traefik.weight=90 \
                     --label traefik.backend=app_weighted \
-                  opstree/spring3hibernate:${BASELINE_VERSION}
+                 santonix/spring3hibernate:${BASELINE_VERSION}
                 """
             }
         }
@@ -61,11 +61,11 @@ pipeline {
                             sudo docker rm -f spring3hibernate-baseline || true
                             sudo docker run -itd --name spring3hibernate-baseline \
                                 --label traefik.enable=true \
-                                --label 'traefik.http.routers.spring3hibernate-baseline.rule=Host(`uat-spring.opstree.com`)' \
+                                --label 'traefik.http.routers.spring3hibernate-baseline.rule=Host(`uat-spring.santonix.com`)' \
                                 --label traefik.port=8080 \
                                 --label traefik.weight=100 \
                                 --label traefik.backend=app_weighted \
-                              opstree/spring3hibernate:${BASELINE_VERSION}
+                             santonix/spring3hibernate:${BASELINE_VERSION}
                             sudo docker rm -f spring3hibernate-canary || true
                             """
                         }
@@ -75,11 +75,11 @@ pipeline {
                             sudo docker rm -f spring3hibernate-canary || true
                             sudo docker run -itd --name spring3hibernate-canary \
                                 --label traefik.enable=true \
-                                --label 'traefik.http.routers.spring3hibernate-baseline.rule=Host(`uat-spring.opstree.com`)' \
+                                --label 'traefik.http.routers.spring3hibernate-baseline.rule=Host(`uat-spring.santonix.com`)' \
                                 --label traefik.port=8080 \
                                 --label traefik.weight=100 \
                                 --label traefik.backend=app_weighted \
-                              opstree/spring3hibernate:${CANARY_VERSION}
+                             santonix/spring3hibernate:${CANARY_VERSION}
                             """
                         }
                     }
