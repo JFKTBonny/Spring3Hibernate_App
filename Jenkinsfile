@@ -1,6 +1,12 @@
 pipeline {
     agent any
     stages {
+        stage('Clean Workspace') {
+            steps {
+                deleteDir()
+            }
+        }
+
         stage('Code Checkout') {
             steps {
                 git credentialsId: 'jenkins-git', url: 'git@github.com:JFKTBonny/Spring3Hibernate_App.git'
@@ -108,6 +114,11 @@ pipeline {
                             additionalArguments: "--docker santonix/spring3hibernate:${env.BUILD_ID}",
                             failOnError: false
                         )
+                    }
+                }
+                stage('Clean Workspace') {
+                    steps {
+                        deleteDir()
                     }
                 }
             }
