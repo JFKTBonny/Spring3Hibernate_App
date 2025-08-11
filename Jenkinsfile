@@ -92,7 +92,7 @@ pipeline {
                         }
                     }
                     steps {
-                        git credentialsId: 'jenkins-git',branch 'main', url: 'git@github.com:JFKTBonny/Spring3Hibernate_App.git'
+                        git credentialsId: 'jenkins-git',branch: 'main', url: 'git@github.com:JFKTBonny/Spring3Hibernate_App.git'
                         sh 'mvn org.owasp:dependency-check-maven:check'
                         publishHTML([
                             allowMissing: false,
