@@ -147,16 +147,7 @@
 					<target>1.8</target>
 				</configuration>
 			</plugin>
-			<plugin>
-				<groupId>com.atlassian.maven.plugins</groupId>
-				<artifactId>clover-maven-plugin</artifactId>
-				<packaging>maven-plugin</packaging>
-				<name>Clover Maven Plugin</name>
-				<version>4.1.10</version> <!-- latest stable version recommended -->
-				<configuration>
-					<warName>Spring3HibernateApp</warName>
-				</configuration>
-			</plugin>
+			
 			
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
