@@ -24,8 +24,6 @@ pipeline {
     environment {
         IMAGE_NAME = "santonix/spring3hibernate"
         VERSION_FILE = "version.txt"
-        DOCKER_IMAGE = "yourdockerhubusername/spring3hibernate"
-        IMAGE_TAG = "v1.0.${env.BUILD_NUMBER}"
         DEV_TEAM_EMAIL = "dev-team@example.com"
         QA_TEAM_EMAIL = "qa-team@example.com"
         RUNNER_EMAIL = "jofranco1203@gmail.com"
@@ -185,27 +183,26 @@ Build URL: ${env.BUILD_URL}
         // After entire pipeline succeeds, deploy docker image and notify QA
         success {
             script {
-                withCredentials([usernamePassword(credentialsId: env.DOCKERHUB_CREDENTIALS, usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
-                    sh """
-                    echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
-                    docker push ${DOCKER_IMAGE}:${IMAGE_TAG}
-                    """
+                withCredentials(credentialsId: 'dockerhub-credentials') {
+                    
+                    
+                    sh 'docker push ${IMAGE_NAME}:${env.APP_VERSION}'
+                  
                 }
                 emailext(
                     to: "${env.QA_TEAM_EMAIL}, ${env.RUNNER_EMAIL} ",
-                    subject: "Docker Image Deployed: ${DOCKER_IMAGE}:${IMAGE_TAG}",
+                    subject: "Docker Image Deployed: ${IMAGE_NAME}:${env.APP_VERSION}",
                     body: """Hello QA Team,
 
 The Docker image has been successfully deployed to Docker Hub.
 
-Image: ${DOCKER_IMAGE}:${IMAGE_TAG}
+Image: ${IMAGE_NAME}:${env.APP_VERSION}
 
-You can pull this image for testing or validation.
 
-Build URL: ${env.BUILD_URL}
+
 
 Regards,
-Jenkins Pipeline
+Jenkins CI
 """
                 )
             }
