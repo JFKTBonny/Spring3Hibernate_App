@@ -149,37 +149,69 @@ pipeline {
             
         
 
-        stage('Deploy to Artifactory') {
-            when {
-                expression { currentBuild.result == null || currentBuild.result == 'SUCCESS' }
-            }
+        stage('Push to Registry') {
             steps {
-                echo "Deploying image ${IMAGE_NAME}:${env.APP_VERSION} to Artifactory"
-                sh "docker push ${IMAGE_NAME}:${env.APP_VERSION}"
+                script {
+                    docker.withRegistry('https://index.docker.io/v1/', 'dockerhub-credentials') {
+                        docker.image("${IMAGE_NAME}:${env.APP_VERSION}").push()
+                        docker.image("${IMAGE_NAME}:latest").push()
+                    }
+                }
+            }
+        }
+        
+
+        
+    }
+
+    post {
+        success {
+            script {
+                notifyTeam(true)
+            }
+        }
+        failure {
+            script {
+                notifyTeam(false)
             }
         }
     }
-    post {
-        failure {
-            echo "Build failed, notifying Dev team before deploy..."
-            emailext (
-            subject: "Build FAILED: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
-            body: "Build failed before Artifactory deploy. Please check the logs.",
-            to: 'dev-team@example.com , jofranco1203@gmail.com'
-            )
-            slackSend(channel: '#dev-alerts', message: "Build FAILED: ${env.JOB_NAME} #${env.BUILD_NUMBER}")
-        }
-        success {
-            echo "Build succeeded, notifying QA with tag: ${env.IMAGE_TAG}"
-            emailext (
-            subject: "Build SUCCESS: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
-            body: "Build succeeded. Image tag: ${env.IMAGE_TAG}. Ready for QA testing.",
-            to: 'qa-team@example.com'
-            )
-            slackSend(channel: '#qa-notifications', message: "Build SUCCESS: ${env.JOB_NAME} #${env.BUILD_NUMBER}, Image tag: ${env.IMAGE_TAG}")
-        }
-   }
 }
 
-  
-   
+def notifyTeam(boolean isSuccess) {               // the def must be declared outside the pipeline...
+    def subject
+    def body
+    def slackColor
+
+    if (isSuccess) {
+        subject = "✅ Build Success - Build #${env.BUILD_NUMBER} - ${env.JOB_NAME}"
+        body = """\
+Hello Team,
+
+The build #${env.BUILD_NUMBER} completed successfully.
+
+Thanks,
+Jenkins CI
+"""
+        slackColor = 'good'
+    } else {
+        subject = "❌ Build Failure - Build #${env.BUILD_NUMBER} - ${env.JOB_NAME}"
+        body = """\
+Hello Team,
+
+The build #${env.BUILD_NUMBER} failed. Please investigate.
+
+Thanks,
+Jenkins CI
+"""
+        slackColor = 'danger'
+    }
+
+    mail to: 'devteam@example.com, jofranco1203@gmail.com',
+        subject: subject,
+        body: body
+
+    slackSend(channel: '#dev-team', color: slackColor, message: subject)
+
+
+}
