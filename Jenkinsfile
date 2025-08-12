@@ -28,7 +28,7 @@ pipeline {
     
 
     environment {
-        SNYK_API_TOKEN = credentials('snyk-token') // Store this in Jenkins Credentials
+        SNYK_API_TOKEN = "snyk-token" // Store this in Jenkins Credentials
     }
 
     stages {
