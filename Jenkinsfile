@@ -4,6 +4,12 @@ pipeline {
         jdk 'jdk17'
         maven 'maven3'
     }
+
+    environment {
+        IMAGE_NAME = "santonix/spring3hibernate"
+        VERSION_FILE = "version.txt"
+    }
+
     stages {
         stage('Clean Workspace') {
             steps {
@@ -17,6 +23,31 @@ pipeline {
             }
         }
 
+        stage('Determine Version') {
+            steps {
+                script {
+                    if (fileExists(VERSION_FILE)) {
+                        def currentVersion = readFile(VERSION_FILE).trim().toInteger()
+                        env.APP_VERSION = "v${currentVersion + 1}"
+                        writeFile file: VERSION_FILE, text: "${currentVersion + 1}"
+                    } else {
+                        env.APP_VERSION = "v1"
+                        writeFile file: VERSION_FILE, text: "1"
+                    }
+                    echo "Building version: ${env.APP_VERSION}"
+                }
+            }
+        }
+
+        stage('Build Docker Image') {
+            steps {
+                script {
+                    docker.build("${IMAGE_NAME}:${env.APP_VERSION}")
+                    docker.build("${IMAGE_NAME}:latest")
+                }
+            }
+        }
+
         stage('Code Quality | Checkstyle | Hadolint') {
             parallel {
                 stage('Checkstyle') {
@@ -27,7 +58,7 @@ pipeline {
                 }
                 stage('Hadolint') {
                     steps {
-                        sh 'hadolint Dockerfile --no-fail -f json | tee -a hadolint.json'
+                        sh 'hadolint Dockerfile --no-fail -f json | tee hadolint.json'
                         recordIssues(tools: [hadoLint(pattern: 'hadolint.json')])
                     }
                 }
@@ -37,23 +68,21 @@ pipeline {
         stage('Unit Testing') {
             steps {
                 sh 'mvn test'
-                recordIssues(tools: [junitParser(pattern: 'target/surefire-reports/*.xml')])
+                junit 'target/surefire-reports/*.xml'
             }
         }
 
         stage('Code Coverage') {
             steps {
                 sh 'mvn cobertura:cobertura'
-                cobertura autoUpdateHealth: false, autoUpdateStability: false,
-                         coberturaReportFile: '**/target/site/cobertura/coverage.xml',
-                         conditionalCoverageTargets: '70,0,0',
-                         failUnhealthy: false, failUnstable: false,
-                         lineCoverageTargets: '80,0,0',
-                         maxNumberOfBuilds: 0,
-                         methodCoverageTargets: '80,0,0',
-                         onlyStable: false,
-                         sourceEncoding: 'ASCII',
-                         zoomCoverageChart: false
+                cobertura(
+                    coberturaReportFile: '**/target/site/cobertura/coverage.xml',
+                    lineCoverageTargets: '80,0,0',
+                    methodCoverageTargets: '80,0,0',
+                    conditionalCoverageTargets: '70,0,0',
+                    failUnhealthy: false,
+                    failUnstable: false
+                )
             }
         }
 
@@ -68,21 +97,29 @@ pipeline {
                             keepAll: true,
                             reportDir: 'target',
                             reportFiles: 'dependency-check-report.html',
-                            reportName: 'Dependency Check',
-                            reportTitles: 'Spring3hibernate'
+                            reportName: 'Dependency Check'
                         ])
                     }
                 }
                 stage('Container Scan') {
                     steps {
-                        echo 'Skipping Snyk scan because image build is not included currently'
-                        // Uncomment and adjust below after you build your Docker image
-                        // snykSecurity(
-                        //    snykInstallation: 'snyk',
-                        //    snykTokenId: 'Snyk-API-token',
-                        //    additionalArguments: "--docker santonix/spring3hibernate:${env.BUILD_ID}",
-                        //    failOnError: false
-                        // )
+                        snykSecurity(
+                            snykInstallation: 'snyk',
+                            snykTokenId: 'Snyk-API-token',
+                            additionalArguments: "--docker ${IMAGE_NAME}:${env.APP_VERSION}",
+                            failOnError: false
+                        )
+                    }
+                }
+            }
+        }
+
+        stage('Push to Registry') {
+            steps {
+                script {
+                    docker.withRegistry('https://index.docker.io/v1/', 'dockerhub-credentials') {
+                        docker.image("${IMAGE_NAME}:${env.APP_VERSION}").push()
+                        docker.image("${IMAGE_NAME}:latest").push()
                     }
                 }
             }
