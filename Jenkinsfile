@@ -28,7 +28,7 @@ pipeline {
     
 
     environment {
-        SNYK_API_TOKEN = credentials('Snyk-API-token') // Store this in Jenkins Credentials
+        SNYK_API_TOKEN = credentials('snyk-token') // Store this in Jenkins Credentials
     }
 
     stages {
@@ -46,14 +46,15 @@ pipeline {
             }
         }
 
-        stage('Container Scan') {
+         stage('Container Scan') {
             steps {
-                snykSecurity(
-                    snykInstallation: 'snyk',
-                    snykTokenId: 'snyk-token',  // Ensure this matches your Jenkins credentials ID exactly
-                    additionalArguments: "--docker ${IMAGE_NAME}:${env.APP_VERSION} --severity-threshold=high",
-                    failOnIssues: false
-                )
+                script {
+                    withCredentials([string(credentialsId: snyk-token, variable: 'SNYK_API_TOKEN')]) {
+                        sh """
+                            snyk test --all-projects --docker ${IMAGE_NAME}:${env.APP_VERSION} --severity-threshold=medium
+                        """
+                    }
+                }
             }
         }
 
