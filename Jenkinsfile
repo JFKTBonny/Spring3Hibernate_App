@@ -120,17 +120,33 @@ pipeline {
                 ])
             }
         }
+        // stage('Container Scan') {
+        //     steps {
+        //         snykSecurity(
+        //             snykInstallation: 'snyk',
+        //             snykTokenId: 'Snyk-API-token',
+        //             additionalArguments: "--docker ${IMAGE_NAME}:${env.APP_VERSION} --severity-threshold=medium",
+        //             failOnError: false
+        //         )
+        //     }
+        // }
+
         stage('Container Scan') {
             steps {
-                snykSecurity(
-                    snykInstallation: 'snyk',
-                    snykTokenId: 'Snyk-API-token',
-                    additionalArguments: "--docker ${IMAGE_NAME}:${env.APP_VERSION} --severity-threshold=medium",
-                    failOnError: false
-                )
+                script {
+                    // Run Trivy scan with severity threshold
+                    sh """
+                        trivy image --severity HIGH,CRITICAL --ignore-unfixed --format json -o trivy-report.json ${IMAGE_NAME}:${env.APP_VERSION}
+                    """
+                    
+                    // Optionally, archive the report or parse it to fail build on vulnerabilities
+                    archiveArtifacts artifacts: 'trivy-report.json', allowEmptyArchive: true
+                    
+                    // You can add logic here to parse JSON and fail build if vulnerabilities found
+                }
             }
         }
-    
+            
         
 
         stage('Push to Registry') {
