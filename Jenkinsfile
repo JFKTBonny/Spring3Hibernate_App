@@ -38,9 +38,9 @@ pipeline {
             steps {
                 sh """
                     docker run --rm \
-                      -e SNYK_TOKEN=${SNYK_API_TOKEN} \
-                      snyk/snyk:docker test ${IMAGE_NAME}:${VERSION} \
-                      --severity-threshold=medium
+                    -e SNYK_TOKEN=${SNYK_API_TOKEN} \
+                    snyk/snyk:docker \
+                    snyk test ${IMAGE_NAME}:${VERSION} --severity-threshold=medium
                 """
             }
         }
