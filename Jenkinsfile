@@ -68,7 +68,7 @@ pipeline {
             parallel {
                 stage('Checkstyle') {
                     steps {
-                        ssh 'mvn checkstyle:checkstyle'
+                        sh 'mvn checkstyle:checkstyle'
                         recordIssues(
                             tools: [checkStyle(id: 'checkstyle', pattern: '**/checkstyle-result.xml')],
                             qualityGates: [[threshold: 1, type: 'TOTAL', unstable: true, failure: false]]
