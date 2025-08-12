@@ -28,9 +28,10 @@ pipeline {
     
 
     environment {
-        SNYK_API_TOKEN = "snyk-token" // Store this in Jenkins Credentials
+        snykApiToken = "snyk-token" // Store this in Jenkins Credentials
         IMAGE_NAME = "santonix/spring3hibernate"
         DOCKERHUB_CREDENTIALS = "dockerhub-credentials"
+        
     }
 
     stages {
