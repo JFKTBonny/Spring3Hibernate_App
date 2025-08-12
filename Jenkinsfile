@@ -69,13 +69,13 @@ pipeline {
                 stage('Checkstyle') {
                     steps {
                         sh 'mvn checkstyle:checkstyle'
-                        recordIssues(tools: [checkStyle(pattern: '**/checkstyle-result.xml')])
+                        recordIssues(tools: [checkStyle(id: 'checkstyle', pattern: '**/checkstyle-result.xml')])
                     }
                 }
                 stage('Hadolint') {
                     steps {
                         sh 'hadolint Dockerfile --no-fail -f json | tee hadolint.json'
-                        recordIssues(tools: [hadoLint(pattern: 'hadolint.json')])
+                        recordIssues(tools: [hadoLint(id: 'hadolint', pattern: 'hadolint.json')])
                     }
                 }
             }
