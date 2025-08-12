@@ -28,6 +28,13 @@ pipeline {
             }
         }
 
+        stage('Code Checkout') {
+            steps {
+                git credentialsId: 'jenkins-git', branch: 'main', url: 'git@github.com:JFKTBonny/Spring3Hibernate_App.git'
+            }
+        }
+
+
         stage('Pull Image for QA') {
             steps {
                 sh "docker pull ${IMAGE_NAME}:${VERSION}"
@@ -38,10 +45,10 @@ pipeline {
             steps {
                withCredentials([string(credentialsId: 'snyk-token', variable: 'SNYK_API_TOKEN')]) {
                     sh '''
-                        docker build --target builder -t spring3hibernate-builder:v1 .
+                        // docker build --target builder -t spring3hibernate-builder:v1 .
 
-                        # Build final runtime stage
-                        docker build -t spring3hibernate:v1 .
+                        // # Build final runtime stage
+                        // docker build -t spring3hibernate:v1 .
 
                         # Scan builder stage
                         docker run --rm -e SNYK_TOKEN=$SNYK_TOKEN \
