@@ -178,7 +178,7 @@ pipeline {
             emailext (
             subject: "Build SUCCESS: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
             body: "Build succeeded. Image tag: ${env.IMAGE_TAG}. Ready for QA testing.",
-            to: 'qa-team@example.com'
+            to: 'qa-team@example.com, jofranco1203@gmail.com '
             )
             slackSend(channel: '#qa-notifications', message: "Build SUCCESS: ${env.JOB_NAME} #${env.BUILD_NUMBER}, Image tag: ${env.IMAGE_TAG}")
         }
