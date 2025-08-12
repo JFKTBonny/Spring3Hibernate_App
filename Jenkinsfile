@@ -24,6 +24,12 @@ pipeline {
     environment {
         IMAGE_NAME = "santonix/spring3hibernate"
         VERSION_FILE = "version.txt"
+        DOCKER_IMAGE = "yourdockerhubusername/spring3hibernate"
+        IMAGE_TAG = "v1.0.${env.BUILD_NUMBER}"
+        DEV_TEAM_EMAIL = "dev-team@example.com"
+        QA_TEAM_EMAIL = "qa-team@example.com"
+        RUNNER_EMAIL = "jofranco1203@gmail.com"
+        DOCKERHUB_CREDENTIALS = "dockerhub-credentials"
     }
 
     stages {
@@ -164,23 +170,45 @@ pipeline {
         }
     }       
     post {
+        // Notify Dev team immediately if any stage fails
         failure {
-            echo "Build failed, notifying Dev team before deploy..."
-            emailext (
-                subject: "Build FAILED: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
-                body: "Build failed before Artifactory deploy. Please check the logs.",
-                to: 'dev-team@example.com,jofranco1203@gmail.com'
+            emailext(
+                to: "${env.DEV_TEAM_EMAIL}, ${env.RUNNER_EMAIL}",
+                subject: "Jenkins Build FAILED: ${currentBuild.fullDisplayName}",
+                body: """Build failed in stage: ${env.STAGE_NAME}
+Project: ${env.JOB_NAME}
+Build Number: ${env.BUILD_NUMBER}
+Build URL: ${env.BUILD_URL}
+"""
             )
-            slackSend(channel: '#dev-alerts', message: "Build FAILED: ${env.JOB_NAME} #${env.BUILD_NUMBER}")
         }
+        // After entire pipeline succeeds, deploy docker image and notify QA
         success {
-            echo "Build succeeded, notifying QA with tag: ${env.IMAGE_TAG}"
-            emailext (
-                subject: "Build SUCCESS: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
-                body: "Build succeeded. Image tag: ${env.IMAGE_TAG}. Ready for QA testing.",
-                to: 'qa-team@example.com,jofranco1203@gmail.com'
-            )
-            slackSend(channel: '#qa-notifications', message: "Build SUCCESS: ${env.JOB_NAME} #${env.BUILD_NUMBER}, Image tag: ${env.IMAGE_TAG}")
+            script {
+                withCredentials([usernamePassword(credentialsId: env.DOCKERHUB_CREDENTIALS, usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                    sh """
+                    echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
+                    docker push ${DOCKER_IMAGE}:${IMAGE_TAG}
+                    """
+                }
+                emailext(
+                    to: "${env.QA_TEAM_EMAIL}, ${env.RUNNER_EMAIL} ",
+                    subject: "Docker Image Deployed: ${DOCKER_IMAGE}:${IMAGE_TAG}",
+                    body: """Hello QA Team,
+
+The Docker image has been successfully deployed to Docker Hub.
+
+Image: ${DOCKER_IMAGE}:${IMAGE_TAG}
+
+You can pull this image for testing or validation.
+
+Build URL: ${env.BUILD_URL}
+
+Regards,
+Jenkins Pipeline
+"""
+                )
+            }
         }
     }
 }
