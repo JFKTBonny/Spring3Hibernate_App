@@ -154,10 +154,13 @@ pipeline {
                 expression { currentBuild.result == null || currentBuild.result == 'SUCCESS' }
             }
             steps {
-                echo "Deploying image ${IMAGE_NAME}:${env.APP_VERSION} to Artifactory"
-                sh "docker push ${IMAGE_NAME}:${env.APP_VERSION}"
+                script {
+                    docker.withRegistry('https://index.docker.io/v1/', 'dockerhub-credentials') {
+                        docker.image("${IMAGE_NAME}:${env.APP_VERSION}").push()
+                        docker.image("${IMAGE_NAME}:latest").push()
+                    }
+                }
             }
-        }
     }
     post {
         failure {
