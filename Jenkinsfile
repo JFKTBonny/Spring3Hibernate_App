@@ -167,22 +167,22 @@ pipeline {
         failure {
             echo "Build failed, notifying Dev team before deploy..."
             emailext (
-            subject: "Build FAILED: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
-            body: "Build failed before Artifactory deploy. Please check the logs.",
-            to: 'dev-team@example.com , jofranco1203@gmail.com'
+                subject: "Build FAILED: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+                body: "Build failed before Artifactory deploy. Please check the logs.",
+                to: 'dev-team@example.com,jofranco1203@gmail.com'
             )
             slackSend(channel: '#dev-alerts', message: "Build FAILED: ${env.JOB_NAME} #${env.BUILD_NUMBER}")
         }
         success {
             echo "Build succeeded, notifying QA with tag: ${env.IMAGE_TAG}"
             emailext (
-            subject: "Build SUCCESS: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
-            body: "Build succeeded. Image tag: ${env.IMAGE_TAG}. Ready for QA testing.",
-            to: 'qa-team@example.com, jofranco1203@gmail.com '
+                subject: "Build SUCCESS: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+                body: "Build succeeded. Image tag: ${env.IMAGE_TAG}. Ready for QA testing.",
+                to: 'qa-team@example.com,jofranco1203@gmail.com'
             )
             slackSend(channel: '#qa-notifications', message: "Build SUCCESS: ${env.JOB_NAME} #${env.BUILD_NUMBER}, Image tag: ${env.IMAGE_TAG}")
         }
-   }
+    }
 }
 
    
