@@ -200,6 +200,12 @@
 			<version>5.2.0</version>
 			<scope>test</scope>
 		</dependency>
+		<!-- https://mvnrepository.com/artifact/org.openclover/clover-maven-plugin -->
+		<dependency>
+			<groupId>org.openclover</groupId>
+			<artifactId>clover-maven-plugin</artifactId>
+			<version>4.5.2</version>
+		</dependency>
 
 		<dependency>
 			<groupId>javax.activation</groupId>
