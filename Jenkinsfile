@@ -36,15 +36,16 @@ pipeline {
 
         stage('Snyk Security Scan') {
             steps {
-                sh """
-                    docker run --rm \
-                    -e SNYK_TOKEN=${SNYK_API_TOKEN} \
-                    snyk/snyk:docker \
-                    snyk test ${IMAGE_NAME}:${VERSION} --severity-threshold=medium
-                """
-            }
-        }
-
+               withCredentials([string(credentialsId: 'snyk-api-token', variable: 'SNYK_API_TOKEN')]) {
+                    sh '''
+                        docker run --rm \
+                            -e SNYK_TOKEN=$SNYK_API_TOKEN \
+                            -v /var/run/docker.sock:/var/run/docker.sock \
+                            snyk/snyk:docker snyk test $IMAGE_NAME:$VERSION --severity-threshold=medium
+                        '''
+                    }
+            } 
+        }       
         stage('Test Image Before Deployment') {
             steps {
                 sh """
