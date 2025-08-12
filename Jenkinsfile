@@ -38,11 +38,21 @@ pipeline {
             steps {
                withCredentials([string(credentialsId: 'snyk-token', variable: 'SNYK_API_TOKEN')]) {
                     sh '''
-                        docker run --rm \
-                            -e SNYK_TOKEN=$SNYK_API_TOKEN \
-                            -v /var/run/docker.sock:/var/run/docker.sock \
-                            snyk/snyk:docker snyk test $IMAGE_NAME:$VERSION --severity-threshold=medium -d
-                        '''
+                        docker build --target builder -t spring3hibernate-builder:v1 .
+
+                        # Build final runtime stage
+                        docker build -t spring3hibernate:v1 .
+
+                        # Scan builder stage
+                        docker run --rm -e SNYK_TOKEN=$SNYK_TOKEN \
+                        -v /var/run/docker.sock:/var/run/docker.sock \
+                        snyk/snyk:docker snyk test spring3hibernate-builder:v1 --severity-threshold=medium
+
+                        # Scan runtime stage
+                        docker run --rm -e SNYK_TOKEN=$SNYK_TOKEN \
+                        -v /var/run/docker.sock:/var/run/docker.sock \
+                        snyk/snyk:docker snyk test spring3hibernate:v1 --severity-threshold=medium
+                      '''
                     }
             } 
         }       
