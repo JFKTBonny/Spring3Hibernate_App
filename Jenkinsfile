@@ -36,7 +36,7 @@ pipeline {
 
         stage('Snyk Security Scan') {
             steps {
-               withCredentials([string(credentialsId: 'snyk-api-token', variable: 'SNYK_API_TOKEN')]) {
+               withCredentials([string(credentialsId: 'snyk-token', variable: 'SNYK_API_TOKEN')]) {
                     sh '''
                         docker run --rm \
                             -e SNYK_TOKEN=$SNYK_API_TOKEN \
