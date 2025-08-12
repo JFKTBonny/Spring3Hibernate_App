@@ -105,33 +105,33 @@ pipeline {
                 ])
             }
         }
-        stage('Security Testing | OWASP | Snyk') {
-            parallel {
-                stage('Dependency Check') {
-                    steps {
-                        sh 'mvn org.owasp:dependency-check-maven:check'
-                        publishHTML([
-                            allowMissing: false,
-                            alwaysLinkToLastBuild: true,
-                            keepAll: true,
-                            reportDir: 'target',
-                            reportFiles: 'dependency-check-report.html',
-                            reportName: 'Dependency Check'
-                        ])
-                    }
-                }
-                stage('Container Scan') {
-                    steps {
-                        snykSecurity(
-                            snykInstallation: 'snyk',
-                            snykTokenId: 'Snyk-API-token',
-                            additionalArguments: "--docker ${IMAGE_NAME}:${env.APP_VERSION}",
-                            failOnError: false
-                        )
-                    }
-                }
+        
+            
+        stage('Dependency Check') {
+            steps {
+                sh 'mvn org.owasp:dependency-check-maven:check'
+                publishHTML([
+                    allowMissing: false,
+                    alwaysLinkToLastBuild: true,
+                    keepAll: true,
+                    reportDir: 'target',
+                    reportFiles: 'dependency-check-report.html',
+                    reportName: 'Dependency Check'
+                ])
             }
         }
+        stage('Container Scan') {
+            steps {
+                snykSecurity(
+                    snykInstallation: 'snyk',
+                    snykTokenId: 'Snyk-API-token',
+                    additionalArguments: "--docker ${IMAGE_NAME}:${env.APP_VERSION}",
+                    failOnError: false
+                )
+            }
+        }
+    
+        
 
         stage('Push to Registry') {
             steps {
