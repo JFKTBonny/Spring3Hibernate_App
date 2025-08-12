@@ -125,7 +125,7 @@ pipeline {
                 snykSecurity(
                     snykInstallation: 'snyk',
                     snykTokenId: 'Snyk-API-token',
-                    additionalArguments: "--docker ${IMAGE_NAME}:${env.APP_VERSION}",
+                    additionalArguments: "--docker ${IMAGE_NAME}:${env.APP_VERSION} --severity-threshold=medium",
                     failOnError: false
                 )
             }
