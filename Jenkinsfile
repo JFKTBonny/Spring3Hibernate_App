@@ -161,7 +161,8 @@ pipeline {
                     }
                 }
             }
-    }
+        }
+    }       
     post {
         failure {
             echo "Build failed, notifying Dev team before deploy..."
@@ -183,6 +184,8 @@ pipeline {
         }
    }
 }
+
+   
 
   
    
