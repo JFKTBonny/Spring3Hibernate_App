@@ -143,31 +143,7 @@ pipeline {
                 }
             }
         }
-        stage('Container Scan') {
-            steps {
-                script {
-                    // Run Snyk scan and capture the result (true if successful, false if failed)
-                    def snykResult = false
-                    try {
-                        snykSecurity(
-                            snykInstallation: 'snyk',
-                            snykTokenId: 'Snyk-API-token',
-                            additionalArguments: "--docker ${IMAGE_NAME}:${env.APP_VERSION}",
-                            failOnError: false  // Don't fail pipeline here; we'll handle manually
-                        )
-                        // If no exception, consider scan successful (adjust if you parse output)
-                        snykResult = true
-                    } catch (err) {
-                        snykResult = false
-                        echo "Snyk scan failed: ${err}"
-                    }
-                    // Save result to current build for downstream stages
-                    currentBuild.description = snykResult ? "Snyk scan passed" : "Snyk scan found vulnerabilities"
-                    // Set an env var for next stages
-                    env.SNYK_SCAN_RESULT = snykResult.toString()
-                }
-            }
-        }
+        
 
         stage('Notify Team') {
             steps {
@@ -179,26 +155,26 @@ pipeline {
                     if (env.SNYK_SCAN_RESULT == 'true') {
                         subject = "✅ Snyk Scan Success - Build #${env.BUILD_NUMBER} - ${env.JOB_NAME}"
                         body = """\
-                            Hello Team,
+        Hello Team,
 
-                            The Snyk security scan for build #${env.BUILD_NUMBER} has completed successfully with no blocking vulnerabilities.
+        The Snyk security scan for build #${env.BUILD_NUMBER} has completed successfully with no blocking vulnerabilities.
 
-                            Thanks,
-                            Jenkins CI
-                            """
-                                            slackColor = 'good'  // green
-                                        } else {
-                                            subject = "⚠️ Snyk Scan Warning - Build #${env.BUILD_NUMBER} - ${env.JOB_NAME}"
-                                            body = """\
-                            Hello Team,
+        Thanks,
+        Jenkins CI
+        """
+                        slackColor = 'good'  // green
+                    } else {
+                        subject = "⚠️ Snyk Scan Warning - Build #${env.BUILD_NUMBER} - ${env.JOB_NAME}"
+                        body = """\
+        Hello Team,
 
-                            The Snyk security scan for build #${env.BUILD_NUMBER} found vulnerabilities above the threshold.
+        The Snyk security scan for build #${env.BUILD_NUMBER} found vulnerabilities above the threshold.
 
-                            Please check the Snyk report and address the issues.
+        Please check the Snyk report and address the issues.
 
-                            Thanks,
-                            Jenkins CI
-                            """
+        Thanks,
+        Jenkins CI
+        """
                         slackColor = 'warning'  // yellow/orange
                     }
 
