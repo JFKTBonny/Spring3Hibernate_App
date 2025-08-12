@@ -5,19 +5,8 @@ pipeline {
         maven 'maven3'
     }
     options {
-        // Keep only last 10 builds or 30 days
         buildDiscarder(logRotator(numToKeepStr: '3', daysToKeepStr: '30'))
-
-        // Timeout build if it runs longer than 30 minutes
-        timeout(time: 5, unit: 'MINUTES')
-
-        // Add timestamps to console output
-        // timestamps()
-
-        // Retry the whole pipeline 2 times on failure
-        // retry(2)
-
-        // Disable concurrent builds (queue new builds instead)
+        timeout(time: 30, unit: 'MINUTES')
         disableConcurrentBuilds()
     }
 
@@ -66,7 +55,6 @@ pipeline {
             }
         }
 
-
         stage('Build Docker Image') {
             steps {
                 script {
@@ -82,8 +70,6 @@ pipeline {
                 recordIssues tools: [checkStyle(pattern: '**/checkstyle-result.xml')]
             }
         }
-                
-        
 
         stage('Unit Testing') {
             steps {
@@ -97,6 +83,7 @@ pipeline {
                 sh 'mvn clean clover:setup test clover:aggregate clover:clover'
             }
         }
+
         stage('Publish Clover Report') {
             steps {
                 step([
@@ -109,8 +96,7 @@ pipeline {
                 ])
             }
         }
-        
-            
+
         stage('Dependency Check') {
             steps {
                 sh 'mvn org.owasp:dependency-check-maven:check'
@@ -124,34 +110,17 @@ pipeline {
                 ])
             }
         }
-        // stage('Container Scan') {
-        //     steps {
-        //         snykSecurity(
-        //             snykInstallation: 'snyk',
-        //             snykTokenId: 'Snyk-API-token',
-        //             additionalArguments: "--docker ${IMAGE_NAME}:${env.APP_VERSION} --severity-threshold=medium",
-        //             failOnError: false
-        //         )
-        //     }
-        // }
 
         stage('Container Scan') {
             steps {
                 script {
-                    // Run Trivy scan with severity threshold
                     sh """
                         trivy image --severity HIGH,CRITICAL --ignore-unfixed --format json -o trivy-report.json ${IMAGE_NAME}:${env.APP_VERSION}
                     """
-                    
-                    // Optionally, archive the report or parse it to fail build on vulnerabilities
                     archiveArtifacts artifacts: 'trivy-report.json', allowEmptyArchive: true
-                    
-                    // You can add logic here to parse JSON and fail build if vulnerabilities found
                 }
             }
         }
-            
-        
 
         stage('Deploy to Artifactory') {
             when {
@@ -159,16 +128,16 @@ pipeline {
             }
             steps {
                 script {
-                    docker.withRegistry('https://index.docker.io/v1/', 'dockerhub-credentials') {
+                    docker.withRegistry('https://index.docker.io/v1/', DOCKERHUB_CREDENTIALS) {
                         docker.image("${IMAGE_NAME}:${env.APP_VERSION}").push()
                         docker.image("${IMAGE_NAME}:latest").push()
                     }
                 }
             }
         }
-    }       
+    }
+
     post {
-        // Notify Dev team immediately if any stage fails
         failure {
             emailext(
                 to: "${env.DEV_TEAM_EMAIL}, ${env.RUNNER_EMAIL}",
@@ -180,26 +149,19 @@ Build URL: ${env.BUILD_URL}
 """
             )
         }
-        // After entire pipeline succeeds, deploy docker image and notify QA
         success {
             script {
-                withCredentials(credentialsId: 'dockerhub-credentials') {
-                    
-                    
+                withCredentials(credentialsId: DOCKERHUB_CREDENTIALS) {
                     sh 'docker push ${IMAGE_NAME}:${env.APP_VERSION}'
-                  
                 }
                 emailext(
-                    to: "${env.QA_TEAM_EMAIL}, ${env.RUNNER_EMAIL} ",
+                    to: "${env.QA_TEAM_EMAIL}, ${env.RUNNER_EMAIL}",
                     subject: "Docker Image Deployed: ${IMAGE_NAME}:${env.APP_VERSION}",
                     body: """Hello QA Team,
 
 The Docker image has been successfully deployed to Docker Hub.
 
 Image: ${IMAGE_NAME}:${env.APP_VERSION}
-
-
-
 
 Regards,
 Jenkins CI
@@ -209,8 +171,3 @@ Jenkins CI
         }
     }
 }
-
-   
-
-  
-   
