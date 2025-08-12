@@ -46,15 +46,14 @@ pipeline {
             }
         }
 
-         stage('Container Scan') {
+         stage('Snyk Security Scan') {
             steps {
-                script {
-                    withCredentials([string(credentialsId: snyk-token, variable: 'SNYK_API_TOKEN')]) {
-                        sh """
-                            snyk test --all-projects --docker ${IMAGE_NAME}:${env.APP_VERSION} --severity-threshold=medium
-                        """
-                    }
-                }
+                snykSecurity(
+                    snykApiToken: "${snyk-token}",
+                    dockerImage: "${IMAGE_NAME}:${env.APP_VERSION}",
+                    failOnIssues: true,
+                    severityThreshold: 'medium'
+                )
             }
         }
 
