@@ -25,8 +25,8 @@ FROM maven:3.8.5-jdk-11-slim AS builder
 COPY pom.xml /usr/src/spring3hibernate/
 COPY ./src/ /usr/src/spring3hibernate/src/
 WORKDIR /usr/src/spring3hibernate/
-RUN mvn clean install -Ddependency-check.skip=true && \
-    mvn package -Ddependency-check.skip=true
+RUN mvn clean package -Ddependency-check.skip=true
+    
 
 FROM tomcat:7-jre7-alpine
 
