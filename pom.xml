@@ -148,9 +148,11 @@
 				</configuration>
 			</plugin>
 			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-war-plugin</artifactId>
-				<version>3.3.2</version> <!-- latest stable version recommended -->
+				<groupId>com.atlassian.maven.plugins</groupId>
+				<artifactId>clover-maven-plugin</artifactId>
+				<packaging>maven-plugin</packaging>
+				<name>Clover Maven Plugin</name>
+				<version>4.1.10</version> <!-- latest stable version recommended -->
 				<configuration>
 					<warName>Spring3HibernateApp</warName>
 				</configuration>
@@ -209,7 +211,11 @@
 			<scope>test</scope>
 		</dependency>
 		<!-- https://mvnrepository.com/artifact/org.openclover/clover-maven-plugin -->
-		
+		<dependency>
+            <groupId>com.atlassian.clover</groupId>
+            <artifactId>clover</artifactId>
+            <version>${cloverVersion}</version>
+        </dependency>
 		<dependency>
 			<groupId>javax.activation</groupId>
 			<artifactId>activation</artifactId>
