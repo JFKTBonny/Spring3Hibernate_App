@@ -74,14 +74,11 @@ pipeline {
 
         stage('Checkstyle Analysis') {
             steps {
-                // Run Checkstyle analysis in your build tool, e.g. Maven, Gradle
                 sh 'mvn checkstyle:checkstyle'
-
-                // Publish the Checkstyle results
-                step([$class: 'hudson.plugins.checkstyle.CheckStylePublisher', pattern: '**/target/checkstyle-result.xml'])
+                recordIssues tools: [checkStyle(pattern: '**/checkstyle-result.xml')]
             }
         }
-        
+                
         
 
         stage('Unit Testing') {
