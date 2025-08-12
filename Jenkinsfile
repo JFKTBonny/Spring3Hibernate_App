@@ -5,33 +5,20 @@ pipeline {
         jdk 'jdk17'
         maven 'maven3'
     }
+
     parameters {
         string(name: 'VERSION', defaultValue: 'latest', trim: true)
     }
+
     options {
-        // Keep only last 10 builds or 30 days
         buildDiscarder(logRotator(numToKeepStr: '3', daysToKeepStr: '30'))
-
-        // Timeout build if it runs longer than 30 minutes
         timeout(time: 5, unit: 'MINUTES')
-
-        // Add timestamps to console output
-        // timestamps()
-
-        // Retry the whole pipeline 2 times on failure
-        // retry(2)
-
-        // Disable concurrent builds (queue new builds instead)
         disableConcurrentBuilds()
     }
 
-    
-
     environment {
-        snykApiToken = "snyk-token" // Store this in Jenkins Credentials
+        SNYK_API_TOKEN = credentials('snyk-token') // Jenkins credentials ID
         IMAGE_NAME = "santonix/spring3hibernate"
-        DOCKERHUB_CREDENTIALS = "dockerhub-credentials"
-        
     }
 
     stages {
@@ -40,23 +27,21 @@ pipeline {
                 deleteDir()
             }
         }
+
         stage('Pull Image for QA') {
             steps {
-                sh """
-                    echo "Pulling image santonix/spring3hibernate:${VERSION}"
-                    docker pull santonix/spring3hibernate:${VERSION}
-                """
+                sh "docker pull ${IMAGE_NAME}:${VERSION}"
             }
         }
 
-         stage('Snyk Security Scan') {
+        stage('Snyk Security Scan') {
             steps {
-                snykSecurity(
-                    snykApiToken: "${snyk-token}",
-                    dockerImage: "${IMAGE_NAME}:${env.APP_VERSION}",
-                    failOnIssues: true,
-                    severityThreshold: 'medium'
-                )
+                sh """
+                    docker run --rm \
+                      -e SNYK_TOKEN=${SNYK_API_TOKEN} \
+                      snyk/snyk:docker test ${IMAGE_NAME}:${VERSION} \
+                      --severity-threshold=medium
+                """
             }
         }
 
@@ -64,7 +49,7 @@ pipeline {
             steps {
                 sh """
                     docker rm -f spring3hibernate-test || true
-                    docker run -d --name spring3hibernate-test -p 18080:8080 santonix/spring3hibernate:${VERSION}
+                    docker run -d --name spring3hibernate-test -p 18080:8080 ${IMAGE_NAME}:${VERSION}
 
                     echo "Waiting for app to start..."
                     sleep 15
@@ -90,14 +75,14 @@ pipeline {
                             --label traefik.enable=true \
                             --label 'traefik.http.routers.spring3hibernate.rule=Host(`qa-spring.santonix.com`)' \
                             --label traefik.port=8080 \
-                            santonix/spring3hibernate:${VERSION}
+                            ${IMAGE_NAME}:${VERSION}
                     else
                          docker rm -f spring3hibernate
                          docker run -itd --name spring3hibernate \
                             --label traefik.enable=true \
                             --label 'traefik.http.routers.spring3hibernate.rule=Host(`qa-spring.santonix.com`)' \
                             --label traefik.port=8080 \
-                            santonix/spring3hibernate:${VERSION}
+                            ${IMAGE_NAME}:${VERSION}
                     fi
                 """
             }
