@@ -1,0 +1,41 @@
+###################### CD( Continuous Delivery/Deployment ):
+
+In Continuous Intergration , incremental changes to the app codes are tested in a dev env to reveal any failures...
+[ Sometimes it may happen that an app is working smoothly in Dev env , but having problems in Prod env...
+  These problems could be because a new change is not compatible with hardware/software in Prod env...
+  Solution: Iac: Infrastructure as code can provide the same Infrastructure in Dev and Prod to avoid encounter such blems...
+                 It provides consistency in infra provisioning so that what work in Dev can smoothly work in Prod...]
+
+There are 2 open source players in the industry to manage DB updates: 
+                                               - Flyway
+                                               - Liquibase                 
+pre-Deployment:
+         - code stability: checkstyle is used by maven to maintain codes quality best practice...
+         - code quality
+         - unit tests    : mvn test...uses the test written by developpers
+         - code coverage: mvn cobertura:cobertura...maven uses  the cobertura plugin the execute this test
+         - security tests: mvn org.owasp:dependency-check-maven:check...maven OWASP plugin to check code  dependencies vulnerability 
+
+intermediate operations:
+          - artifacts management
+          - database versioning
+
+post-Deployment Intergrations:
+           - smoke tests    
+           - regression tests
+           - API tests                   
+
+intelligent notifications management
+branching strategy review
+
+
+regression testing: selenium
+performance testing: apache JMETER, k6, locust...
+API testing: SOAP
+notifications: 
+            - Email
+            -Slack
+            - Pagerduty
+            - Skype
+            - Jabber
+            - HipChat

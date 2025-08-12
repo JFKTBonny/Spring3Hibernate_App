@@ -116,24 +116,107 @@
 
 ***** Deployement Strategies:   are various ways of deploying apps based on used cases...
               examples: - Normal: we simple remove version A and deploy version B on n the app server with downtime...
-                        - Rolling/Ramped:
-                            Both versions(A and B) are deployed...the transition from A to B is made gradually...
-                            The version A instances will be running behind the LB, and 1 instance of version B will also be deployed...
-                            When the version B is ready to serve the traffic, it will start receiving the traffic and 1 instance of version A 
-                            will be removed from the LB and shutdown...
-                            This process will continue until all instances of version B are rolled out....
-                            This strategy generally depends on 2 factors:
-                                            1- Max Surge: number of instances of the new version that are to be added in the current capacity...
-                                            2- Max Unavailable: number of Unavailable instances of the older version in the rolling update procedure...
-                           [ Pros: no downtime during transition... Cons: the transition is time-consumming....]                
-                        - Blue Green:
-                                    version B is deployed alongside version A with the exact number of instances and resources...
-                                    once the testing of the new version is completed successfully , the traffic is switched from A to B on LB level... 
-                                    [ Pros: it is the faster strategy with no downtime...Cons(Drawbacks): having 2 identical infrastrures running at the same is 
-                                    too expensive...  ]
-                        - Canary :
-                               The Canary deploy generally shifts the prod traffic from A to B to live Users...
-                               A percentage of the traffic(example: 90%) is served(through LB) to version A and the rest(example: 10%) to version B,
-                               while their performances are monitored...this performance monitoring helps decide if rollout or rollback should be right move... 
+                        - Rolling Update:
+                                   Rolling Update:
+                                       Concept:
 
+                                             You replace the old version gradually, instance by instance, until all are running the new version.
+
+                                             At any point, the environment is a mix of old and new versions.
+
+                                             Process
+
+                                             Take one (or a few) instances of the old version out of rotation.
+
+                                             Deploy the new version to those instances.
+
+                                             Put them back into service.
+
+                                             Repeat until all old version instances are replaced.
+
+                                       Pros:
+
+                                             No downtime (services are always running).
+
+                                             No need for duplicate environments.
+
+                                             Less infrastructure cost than Blue-Green.
+
+                                       Cons:
+
+                                             Harder to roll back — you’d need to re-roll to the old version.
+
+                                             For a short time, users may hit different versions (could cause session/data issues).
+
+                                             Harder to isolate new version issues compared to Canary.
+                                                
+                        - Blue Green:
+                                    
+                                    1️⃣ Blue-Green Deployment:
+                                          Concept:
+
+                                                You have two identical environments:
+
+                                                      Blue → current production version
+
+                                                      Green → new version
+
+                                                      Only one is live at a time.
+
+                                                Process:
+
+                                                      Deploy new version to the inactive environment (e.g., Green).
+
+                                                      Test it fully without affecting users.
+
+                                                      Switch traffic from Blue → Green (DNS update, load balancer switch, etc.).
+
+                                                      If something fails, switch back to Blue quickly.
+
+                                                Pros:
+
+                                                      Instant rollback (just flip traffic back).
+
+                                                      Zero downtime.
+
+                                                      Production-like testing before go-live.
+
+                                                Cons:
+
+                                                      Requires duplicate infrastructure (cost).
+
+                                                      Switching is “all-or-nothing” (no gradual rollout).
+                        - Canary :
+                              2️⃣ Canary Deployment:
+                                    Concept:
+
+                                          Deploy new version to a small percentage of users first (the canary group), while the rest still use the old version.
+
+                                          Gradually increase traffic to the new version if it works well.
+
+                                    Process:
+
+                                          Deploy the Canary version alongside the Baseline version.
+
+                                          Route a small percentage of traffic to Canary (e.g., 5–10%).
+
+                                          Monitor performance, errors, user feedback.
+
+                                          If stable → gradually increase traffic until Canary becomes 100%.
+
+                                          If unstable → rollback only the Canary traffic, rest is unaffected.
+
+                                    Pros:
+
+                                          Safer rollouts (issues affect fewer users).
+
+                                          Easy performance monitoring in production.
+
+                                          Minimal risk of full-scale outages.
+
+                                    Cons:
+
+                                          More complex traffic management (needs load balancer support).
+
+                                          Slightly longer rollout time compared to Blue-Green. 
 
