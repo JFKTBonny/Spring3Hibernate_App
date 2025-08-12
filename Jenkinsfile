@@ -91,19 +91,23 @@ pipeline {
             }
         }
 
-        stage('Test & Coverage') {
+        stage('Build and Test with Clover') {
             steps {
-                sh 'mvn clean clover:setup test clover:aggregate clover:clover'  // or phpunit command
+                sh 'mvn clean clover:setup test clover:aggregate clover:clover'
             }
         }
         stage('Publish Clover Report') {
             steps {
-                publishCoverage adapters: [
-                    cloverAdapter('target/site/clover/clover.xml')
-                ]
+                step([
+                    $class: 'CloverPublisher',
+                    cloverReportDir: 'target/site',
+                    cloverReportFileName: 'clover.xml',
+                    healthyTarget: [methodCoverage: 70, conditionalCoverage: 80, statementCoverage: 80],
+                    unhealthyTarget: [methodCoverage: 50, conditionalCoverage: 50, statementCoverage: 50],
+                    failingTarget: [methodCoverage: 0, conditionalCoverage: 0, statementCoverage: 0]
+                ])
             }
         }
-
         stage('Security Testing | OWASP | Snyk') {
             parallel {
                 stage('Dependency Check') {
