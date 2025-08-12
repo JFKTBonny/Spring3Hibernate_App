@@ -128,8 +128,8 @@ pipeline {
             }
             steps {
                 script {
-                    withCredentials([string(credentialsId: 'dockerhub-credentials', variable: 'DOCKERHUB_TOKEN')]) {
-                        sh 'docker login -u your_username -p $DOCKERHUB_TOKEN'
+                    withCredentials([usernamePassword(credentialsId: 'dockerhub-credentials', usernameVariable: 'DOCKERHUB_USERNAME', passwordVariable: 'DOCKERHUB_TOKEN')]) {
+                        sh 'docker login -u $DOCKERHUB_USERNAME -p $DOCKERHUB_TOKEN'
                         docker.withRegistry('https://index.docker.io/v1/', 'dockerhub-credentials') {
                             docker.image("${IMAGE_NAME}:${env.APP_VERSION}").push()
                             docker.image("${IMAGE_NAME}:latest").push()
