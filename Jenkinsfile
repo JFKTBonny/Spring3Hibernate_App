@@ -128,9 +128,12 @@ pipeline {
             }
             steps {
                 script {
-                    docker.withRegistry('https://index.docker.io/v1/', DOCKERHUB_CREDENTIALS) {
-                        docker.image("${IMAGE_NAME}:${env.APP_VERSION}").push()
-                        docker.image("${IMAGE_NAME}:latest").push()
+                    withCredentials([string(credentialsId: 'dockerhub-credentials', variable: 'DOCKERHUB_TOKEN')]) {
+                        sh 'docker login -u your_username -p $DOCKERHUB_TOKEN'
+                        docker.withRegistry('https://index.docker.io/v1/', 'dockerhub-credentials') {
+                            docker.image("${IMAGE_NAME}:${env.APP_VERSION}").push()
+                            docker.image("${IMAGE_NAME}:latest").push()
+                        }
                     }
                 }
             }
@@ -150,14 +153,10 @@ Build URL: ${env.BUILD_URL}
             )
         }
         success {
-            script {
-                withCredentials(credentialsId: DOCKERHUB_CREDENTIALS) {
-                    sh 'docker push ${IMAGE_NAME}:${env.APP_VERSION}'
-                }
-                emailext(
-                    to: "${env.QA_TEAM_EMAIL}, ${env.RUNNER_EMAIL}",
-                    subject: "Docker Image Deployed: ${IMAGE_NAME}:${env.APP_VERSION}",
-                    body: """Hello QA Team,
+            emailext(
+                to: "${env.QA_TEAM_EMAIL}, ${env.RUNNER_EMAIL}",
+                subject: "Docker Image Deployed: ${IMAGE_NAME}:${env.APP_VERSION}",
+                body: """Hello QA Team,
 
 The Docker image has been successfully deployed to Docker Hub.
 
@@ -166,8 +165,7 @@ Image: ${IMAGE_NAME}:${env.APP_VERSION}
 Regards,
 Jenkins CI
 """
-                )
-            }
+            )
         }
     }
 }
