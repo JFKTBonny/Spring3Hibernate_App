@@ -8,8 +8,8 @@ COPY src/ .
 
 
 # Download dependencies only
-RUN mvn dependency:go-offline -Ddependency-check.skip=true \
-    mvn clean package -Ddependency-check.skip=true && ls -l target/
+RUN  mvn clean package -Ddependency-check.skip=true && ls -l target/
+   
 
 
 
