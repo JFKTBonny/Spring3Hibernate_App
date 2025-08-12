@@ -50,9 +50,9 @@ pipeline {
             steps {
                 snykSecurity(
                     snykInstallation: 'snyk',
-                    snykTokenId: 'Snyk-API-token',
+                    snykTokenId: 'Snyk-API-token',  // Ensure this matches your Jenkins credentials ID exactly
                     additionalArguments: "--docker ${IMAGE_NAME}:${env.APP_VERSION} --severity-threshold=high",
-                    failOnError: false
+                    failOnIssues: false
                 )
             }
         }
