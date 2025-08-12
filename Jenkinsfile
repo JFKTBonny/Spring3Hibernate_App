@@ -74,11 +74,11 @@ pipeline {
 
         stage('Checkstyle Analysis') {
             steps {
-                // Run your build that generates checkstyle-result.xml, e.g. mvn checkstyle:checkstyle
+                // Run Checkstyle analysis in your build tool, e.g. Maven, Gradle
                 sh 'mvn checkstyle:checkstyle'
 
-                // Publish Checkstyle results
-                checkstyle pattern: '**/checkstyle-result.xml'
+                // Publish the Checkstyle results
+                step([$class: 'hudson.plugins.checkstyle.CheckStylePublisher', pattern: '**/target/checkstyle-result.xml'])
             }
         }
         
