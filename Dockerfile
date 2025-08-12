@@ -1,36 +1,27 @@
-
-# FROM maven:3.8.5-jdk-11-slim AS builder
-
-# # Set working directory
-# WORKDIR /usr/src/spring3hibernate/
-
-# # Copy only pom.xml first to leverage dependency caching
-# COPY pom.xml .
-
-# # Pre-download dependencies
-# RUN mvn dependency:go-offline -Ddependency-check.skip=true
-
-# # Now copy the source code
-# COPY ./src ./src
-
-# RUN mvn clean package -Ddependency-check.skip=true
-
-# FROM tomcat:7-jre7-alpine
-# RUN rm -rf /usr/local/tomcat/webapps/*
-# COPY --from=builder /usr/src/spring3hibernate/target/Spring3HibernateApp.war /usr/local/tomcat/webapps/ROOT.war
-# EXPOSE 8080
-
-
 FROM maven:3.8.5-jdk-11-slim AS builder
-COPY pom.xml /usr/src/spring3hibernate/
-COPY ./src/ /usr/src/spring3hibernate/src/
-WORKDIR /usr/src/spring3hibernate/
-RUN mvn clean package -Ddependency-check.skip=true
-    
 
-FROM tomcat:7-jre7-alpine
+WORKDIR /usr/src/spring3hibernate/
+
+# Copy pom.xml first to leverage cached dependencies extraction
+COPY pom.xml ./
+
+# Download dependencies only
+RUN mvn dependency:go-offline -Ddependency-check.skip=true
+
+# Copy source code
+COPY src ./src/
+
+# Build package and verify the WAR file
+RUN mvn clean package -Ddependency-check.skip=true && ls -l target/
+
+# Use Tomcat base with JDK 11, more compatible with your build
+FROM tomcat:9-jdk11-openjdk-slim
 
 RUN rm -rf /usr/local/tomcat/webapps/*
+
+# Copy the WAR from builder stage
 COPY --from=builder /usr/src/spring3hibernate/target/Spring3HibernateApp.war /usr/local/tomcat/webapps/ROOT.war
+
 WORKDIR /usr/local/tomcat/webapps/
+
 EXPOSE 8080
