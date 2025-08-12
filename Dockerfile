@@ -3,13 +3,15 @@ FROM maven:3.8.5-jdk-11-slim AS builder
 WORKDIR /usr/src/spring3hibernate/
 
 # Copy pom.xml first to leverage cached dependencies extraction
-COPY pom.xml ./
+COPY pom.xml .
+COPY src/ .
+
 
 # Download dependencies only
-RUN mvn dependency:go-offline -Ddependency-check.skip=true
+RUN mvn dependency:go-offline -Ddependency-check.skip=true \
+    mvn clean package -Ddependency-check.skip=true && ls -l target/
 
-# Copy source code
-COPY src ./src/
+
 
 # Build package and verify the WAR file
 RUN mvn clean package -Ddependency-check.skip=true && ls -l target/
