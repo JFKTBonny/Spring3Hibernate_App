@@ -158,7 +158,7 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-clover-plugin</artifactId>
-				<version>4.4.1</version> <!-- newer version if possible -->
+				<version>4.3.1</version> <!-- newer version if possible -->
 				<configuration>
 					<initString>create=true</initString>
 				</configuration>
@@ -209,12 +209,7 @@
 			<scope>test</scope>
 		</dependency>
 		<!-- https://mvnrepository.com/artifact/org.openclover/clover-maven-plugin -->
-		<dependency>
-			<groupId>org.openclover</groupId>
-			<artifactId>clover-maven-plugin</artifactId>
-			<version>${cloverVersion}</version>
-		</dependency>
-
+		
 		<dependency>
 			<groupId>javax.activation</groupId>
 			<artifactId>activation</artifactId>
