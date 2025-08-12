@@ -55,6 +55,14 @@ pipeline {
             }
         }
 
+        stage('Hadolint') {
+            steps {
+                sh 'hadolint Dockerfile --no-fail -f json | tee hadolint.json'
+                recordIssues(tools: [hadoLint(id: 'hadolint', pattern: 'hadolint.json')])
+            }
+        }
+    
+
         stage('Build Docker Image') {
             steps {
                 script {
@@ -64,25 +72,18 @@ pipeline {
             }
         }
 
-        stage('Code Quality | Checkstyle | Hadolint') {
-            parallel {
-                stage('Checkstyle') {
-                    steps {
-                        sh 'mvn checkstyle:checkstyle'
-                        recordIssues(
-                            tools: [checkStyle(id: 'checkstyle', pattern: '**/checkstyle-result.xml')],
-                            qualityGates: [[threshold: 1, type: 'TOTAL', unstable: true, failure: false]]
-                        )
-                    }
-                }
-                stage('Hadolint') {
-                    steps {
-                        sh 'hadolint Dockerfile --no-fail -f json | tee hadolint.json'
-                        recordIssues(tools: [hadoLint(id: 'hadolint', pattern: 'hadolint.json')])
-                    }
-                }
+        
+        stage('Checkstyle') {
+            steps {
+                sh 'mvn checkstyle:checkstyle'
+                recordIssues(
+                    tools: [checkStyle( 'checkstyle', pattern: '**/checkstyle-result.xml')],
+                    qualityGates: [[threshold: 1, type: 'TOTAL', unstable: true, failure: false]]
+                )
             }
         }
+        
+        
 
         stage('Unit Testing') {
             steps {
