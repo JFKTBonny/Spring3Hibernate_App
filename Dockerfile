@@ -14,7 +14,7 @@ RUN mvn dependency:go-offline -Ddependency-check.skip=true \
 
 
 # Build package and verify the WAR file
-RUN mvn clean package -Ddependency-check.skip=true && ls -l target/
+
 
 # Use Tomcat base with JDK 11, more compatible with your build
 FROM tomcat:9-jdk11-openjdk-slim
