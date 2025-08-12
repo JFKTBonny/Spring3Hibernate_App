@@ -15,7 +15,7 @@ pipeline {
         // timestamps()
 
         // Retry the whole pipeline 2 times on failure
-        retry(2)
+        // retry(2)
 
         // Disable concurrent builds (queue new builds instead)
         disableConcurrentBuilds()
