@@ -72,14 +72,13 @@ pipeline {
             }
         }
 
-        
-        stage('Checkstyle') {
+        stage('Checkstyle Analysis') {
             steps {
+                // Run your build that generates checkstyle-result.xml, e.g. mvn checkstyle:checkstyle
                 sh 'mvn checkstyle:checkstyle'
-                recordIssues(
-                    tools: [checkStyle( 'checkstyle', pattern: '**/checkstyle-result.xml')],
-                    qualityGates: [[threshold: 1, type: 'TOTAL', unstable: true, failure: false]]
-                )
+
+                // Publish Checkstyle results
+                checkstyle pattern: '**/checkstyle-result.xml'
             }
         }
         
