@@ -72,17 +72,16 @@ pipeline {
             }
         }
 
-        stage('Code Coverage') {
+        stage('Test & Coverage') {
             steps {
-                sh 'mvn cobertura:cobertura'
-                cobertura(
-                    coberturaReportFile: '**/target/site/cobertura/coverage.xml',
-                    lineCoverageTargets: '80,0,0',
-                    methodCoverageTargets: '80,0,0',
-                    conditionalCoverageTargets: '70,0,0',
-                    failUnhealthy: false,
-                    failUnstable: false
-                )
+                sh 'mvn clover:setup test clover:clover'  // or phpunit command
+            }
+        }
+        stage('Publish Clover Report') {
+            steps {
+                publishCoverage adapters: [
+                    cloverAdapter('target/site/clover/clover.xml')
+                ]
             }
         }
 
