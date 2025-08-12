@@ -145,48 +145,57 @@ pipeline {
         }
         
 
-        stage('Notify Team') {
-            steps {
-                script {
-                    def subject
-                    def body
-                    def slackColor
+        
+    }
 
-                    if (env.SNYK_SCAN_RESULT == 'true') {
-                        subject = "✅ Snyk Scan Success - Build #${env.BUILD_NUMBER} - ${env.JOB_NAME}"
-                        body = """\
-        Hello Team,
-
-        The Snyk security scan for build #${env.BUILD_NUMBER} has completed successfully with no blocking vulnerabilities.
-
-        Thanks,
-        Jenkins CI
-        """
-                        slackColor = 'good'  // green
-                    } else {
-                        subject = "⚠️ Snyk Scan Warning - Build #${env.BUILD_NUMBER} - ${env.JOB_NAME}"
-                        body = """\
-        Hello Team,
-
-        The Snyk security scan for build #${env.BUILD_NUMBER} found vulnerabilities above the threshold.
-
-        Please check the Snyk report and address the issues.
-
-        Thanks,
-        Jenkins CI
-        """
-                        slackColor = 'warning'  // yellow/orange
-                    }
-
-                    // Send email
-                    mail to: 'devteam@example.com, jofranco1203@gmail.com',
-                        subject: subject,
-                        body: body
-
-                    // Send Slack notification
-                    slackSend(channel: '#dev-team', color: slackColor, message: subject)
-                }
+    post {
+        success {
+            script {
+                notifyTeam(true)
+            }
+        }
+        failure {
+            script {
+                notifyTeam(false)
             }
         }
     }
+}
+
+def notifyTeam(boolean isSuccess) {               // the def must be declared outside the pipeline...
+    def subject
+    def body
+    def slackColor
+
+    if (isSuccess) {
+        subject = "✅ Build Success - Build #${env.BUILD_NUMBER} - ${env.JOB_NAME}"
+        body = """\
+Hello Team,
+
+The build #${env.BUILD_NUMBER} completed successfully.
+
+Thanks,
+Jenkins CI
+"""
+        slackColor = 'good'
+    } else {
+        subject = "❌ Build Failure - Build #${env.BUILD_NUMBER} - ${env.JOB_NAME}"
+        body = """\
+Hello Team,
+
+The build #${env.BUILD_NUMBER} failed. Please investigate.
+
+Thanks,
+Jenkins CI
+"""
+        slackColor = 'danger'
+    }
+
+    mail to: 'devteam@example.com, jofranco1203@gmail.com',
+        subject: subject,
+        body: body
+
+    slackSend(channel: '#dev-team', color: slackColor, message: subject)
+
+
 }
