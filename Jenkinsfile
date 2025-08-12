@@ -4,6 +4,22 @@ pipeline {
         jdk 'jdk17'
         maven 'maven3'
     }
+    options {
+        // Keep only last 10 builds or 30 days
+        buildDiscarder(logRotator(numToKeepStr: '3', daysToKeepStr: '30'))
+
+        // Timeout build if it runs longer than 30 minutes
+        timeout(time: 5, unit: 'MINUTES')
+
+        // Add timestamps to console output
+        // timestamps()
+
+        // Retry the whole pipeline 2 times on failure
+        retry(2)
+
+        // Disable concurrent builds (queue new builds instead)
+        disableConcurrentBuilds()
+    }
 
     environment {
         IMAGE_NAME = "santonix/spring3hibernate"
