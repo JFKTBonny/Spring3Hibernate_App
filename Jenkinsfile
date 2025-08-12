@@ -93,7 +93,7 @@ pipeline {
 
         stage('Test & Coverage') {
             steps {
-                sh 'mvn clover:instrument test clover:clover'  // or phpunit command
+                sh 'mvn clean clover:setup test clover:aggregate clover:clover'  // or phpunit command
             }
         }
         stage('Publish Clover Report') {
