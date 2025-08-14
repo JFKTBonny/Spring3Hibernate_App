@@ -1,10 +1,10 @@
 pipeline {
     agent any
-    
+
     tools {
         jdk 'jdk17'
         maven 'maven3'
-        snyk  'snyk'
+        snyk 'snyk'
     }
 
     parameters {
@@ -18,7 +18,6 @@ pipeline {
     }
 
     environment {
-        SNYK_API_TOKEN = "SNYK_API_TOKEN"
         IMAGE_NAME = "santonix/spring3hibernate"
     }
 
@@ -35,7 +34,6 @@ pipeline {
             }
         }
 
-
         stage('Pull Image for QA') {
             steps {
                 sh "docker pull ${IMAGE_NAME}:${VERSION}"
@@ -44,35 +42,30 @@ pipeline {
 
         stage('Download Latest Snyk CLI') {
             steps {
-             // Authorize the Snyk CLI
-              withCredentials([string(credentialsId: 'SNYK_API_TOKEN', variable: 'SNYK_API_TOKEN_VAR')]) {
-            
-               latest_version = sh(script: 'curl -Is "https://github.com/snyk/snyk/releases/latest" | grep "^location" | sed s#.*tag/##g', returnStdout: true)
-                latest_version = latest_version.trim()
-                echo "Latest Snyk CLI Version: ${latest_version}"
+                script {
+                    withCredentials([string(credentialsId: 'SNYK_API_TOKEN', variable: 'SNYK_API_TOKEN_VAR')]) {
+                        def latest_version = sh(
+                            script: 'curl -Is "https://github.com/snyk/snyk/releases/latest" | grep "^location" | sed s#.*tag/##g',
+                            returnStdout: true
+                        ).trim()
 
-                snyk_cli_dl_linux="https://github.com/snyk/snyk/releases/download/${latest_version}/snyk-linux"
-                echo "Download URL: ${snyk_cli_dl_linux}"
+                        echo "Latest Snyk CLI Version: ${latest_version}"
 
-                    sh """
-                        curl -Lo ./snyk "${snyk_cli_dl_linux}"
-                        chmod +x snyk
-                        ls -la
-                        ./snyk -v
-                    """
-                
+                        def snyk_cli_dl_linux = "https://github.com/snyk/snyk/releases/download/${latest_version}/snyk-linux"
+                        echo "Download URL: ${snyk_cli_dl_linux}"
 
+                        sh """
+                            curl -Lo ./snyk "${snyk_cli_dl_linux}"
+                            chmod +x snyk
+                            ./snyk -v
+                        """
 
-                }     
+                        sh './snyk auth ${SNYK_API_TOKEN_VAR}'
+                    }
+                }
             }
-            
         }
-        stage('Authorize Snyk CLI') {
-                sh './snyk auth ${SNYK_API_TOKEN_VAR}'
-            }
 
-
-             
         stage('Test Image Before Deployment') {
             steps {
                 sh """
@@ -98,20 +91,12 @@ pipeline {
         stage('Deploy on QA Environment') {
             steps {
                 sh """
-                    if ! docker inspect spring3hibernate > /dev/null 2>&1; then
-                         docker run -itd --name spring3hibernate \
-                            --label traefik.enable=true \
-                            --label 'traefik.http.routers.spring3hibernate.rule=Host(`qa-spring.santonix.com`)' \
-                            --label traefik.port=8080 \
-                            ${IMAGE_NAME}:${VERSION}
-                    else
-                         docker rm -f spring3hibernate
-                         docker run -itd --name spring3hibernate \
-                            --label traefik.enable=true \
-                            --label 'traefik.http.routers.spring3hibernate.rule=Host(`qa-spring.santonix.com`)' \
-                            --label traefik.port=8080 \
-                            ${IMAGE_NAME}:${VERSION}
-                    fi
+                    docker rm -f spring3hibernate || true
+                    docker run -itd --name spring3hibernate \
+                        --label traefik.enable=true \
+                        --label 'traefik.http.routers.spring3hibernate.rule=Host(\`qa-spring.santonix.com\`)' \
+                        --label traefik.port=8080 \
+                        ${IMAGE_NAME}:${VERSION}
                 """
             }
         }
