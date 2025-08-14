@@ -18,7 +18,7 @@ pipeline {
     }
 
     environment {
-        SNYK_API_TOKEN = credentials('snyk-token') // Jenkins credentials ID
+        SNYK_API_TOKEN = "snyk-token"
         IMAGE_NAME = "santonix/spring3hibernate"
     }
 
