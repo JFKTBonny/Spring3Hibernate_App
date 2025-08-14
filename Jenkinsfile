@@ -44,7 +44,7 @@ pipeline {
 
         stage('Snyk Security Scan') {
             steps {
-               withCredentials([string(credentialsId: 'snyk-token', variable: 'SNYK_API_TOKEN')]) {
+               withCredentials([string(credentialsId: 'snyk-token', variable: 'snyk-token')]) {
                     sh '''
                         # docker build --target builder -t spring3hibernate-builder:v1 .
 
