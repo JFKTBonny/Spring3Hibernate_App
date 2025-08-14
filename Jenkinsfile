@@ -4,6 +4,7 @@ pipeline {
     tools {
         jdk 'jdk17'
         maven 'maven3'
+        snyk  'snyk'
     }
 
     parameters {
