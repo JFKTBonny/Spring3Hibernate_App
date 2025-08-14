@@ -42,27 +42,27 @@ pipeline {
             }
         }
 
-        stage('Snyk Security Scan') {
-            steps {
-               withCredentials([string(credentialsId: 'SNYK_API_TOKEN', variable: 'SNYK_API_TOKEN')]) {
-                    sh '''
-                        # docker build --target builder -t spring3hibernate-builder:v1 .
+        stage('Download Latest Snyk CLI') {
+            latest_version = sh(script: 'curl -Is "https://github.com/snyk/snyk/releases/latest" | grep "^location" | sed s#.*tag/##g', returnStdout: true)
+            latest_version = latest_version.trim()
+            echo "Latest Snyk CLI Version: ${latest_version}"
 
-                         # Build final runtime stage
-                         # docker build -t spring3hibernate:v1 .
+            snyk_cli_dl_linux="https://github.com/snyk/snyk/releases/download/${latest_version}/snyk-linux"
+            echo "Download URL: ${snyk_cli_dl_linux}"
 
-                        # Scan builder stage
-                        docker run --rm -e SNYK_API_TOKEN=$SNYK_API_TOKEN \
-                        -v /var/run/docker.sock:/var/run/docker.sock \
-                        snyk/snyk:docker snyk test spring3hibernate-builder:v1 --severity-threshold=medium
+            sh """
+                curl -Lo ./snyk "${snyk_cli_dl_linux}"
+                chmod +x snyk
+                ls -la
+                ./snyk -v
+            """
+        }
 
-                        # Scan runtime stage
-                        docker run --rm -e SNYK_API_TOKEN=$SNYK_API_TOKEN \
-                        -v /var/run/docker.sock:/var/run/docker.sock \
-                        snyk/snyk:docker snyk test spring3hibernate:v1 --severity-threshold=medium
-                      '''
-                    }
-            } 
+        // Authorize the Snyk CLI
+        withCredentials([string(credentialsId: 'SNYK_API_TOKEN', variable: 'SNYK_API_TOKEN_VAR')]) {
+            stage('Authorize Snyk CLI') {
+                sh './snyk auth ${SNYK_API_TOKEN_VAR}'
+            }
         }       
         stage('Test Image Before Deployment') {
             steps {
