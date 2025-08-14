@@ -18,7 +18,7 @@ pipeline {
     }
 
     environment {
-        SNYK_API_TOKEN = "snyk-token"
+        SNYK_API_TOKEN = "SNYK_API_TOKEN"
         IMAGE_NAME = "santonix/spring3hibernate"
     }
 
@@ -44,7 +44,7 @@ pipeline {
 
         stage('Snyk Security Scan') {
             steps {
-               withCredentials([string(credentialsId: 'snyk-token', variable: 'snyk-token')]) {
+               withCredentials([string(credentialsId: 'SNYK_API_TOKEN', variable: 'SNYK_API_TOKEN')]) {
                     sh '''
                         # docker build --target builder -t spring3hibernate-builder:v1 .
 
@@ -52,12 +52,12 @@ pipeline {
                          # docker build -t spring3hibernate:v1 .
 
                         # Scan builder stage
-                        docker run --rm -e SNYK_TOKEN=$SNYK_TOKEN \
+                        docker run --rm -e SNYK_API_TOKEN=$SNYK_API_TOKEN \
                         -v /var/run/docker.sock:/var/run/docker.sock \
                         snyk/snyk:docker snyk test spring3hibernate-builder:v1 --severity-threshold=medium
 
                         # Scan runtime stage
-                        docker run --rm -e SNYK_TOKEN=$SNYK_TOKEN \
+                        docker run --rm -e SNYK_API_TOKEN=$SNYK_API_TOKEN \
                         -v /var/run/docker.sock:/var/run/docker.sock \
                         snyk/snyk:docker snyk test spring3hibernate:v1 --severity-threshold=medium
                       '''
