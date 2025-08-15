@@ -4,7 +4,6 @@ pipeline {
     tools {
         jdk 'jdk17'
         maven 'maven3'
-        snyk 'snyk'
     }
 
     parameters {
@@ -35,88 +34,47 @@ pipeline {
             }
         }
 
-        
-
         stage('Download Latest Snyk CLI') {
             steps {
                 sh '''
-                    latest_version=$(curl -Is "https://github.com/snyk/cli/releases/latest" | grep "^location" | sed s#.*tag/##g | tr -d "\r")
+                    latest_version=$(curl -Is "https://github.com/snyk/cli/releases/latest" | grep "^location" | sed s#.*tag/##g | tr -d "\\r")
                     echo "Latest Snyk CLI Version: ${latest_version}"
 
                     snyk_cli_dl_linux="https://github.com/snyk/cli/releases/download/${latest_version}/snyk-linux"
                     echo "Download URL: ${snyk_cli_dl_linux}"
 
-                    curl -Lo ./snyk "${snyk_cli_dl_linux}"
-                    chmod +x snyk
-                    ls -la
-                    ./snyk -v
+                    curl -Lo /usr/local/bin/snyk "${snyk_cli_dl_linux}"
+                    chmod +x /usr/local/bin/snyk
+                    snyk -v
                 '''
             }
         }
 
-        
-
         stage('Authorize Snyk CLI') {
             steps {
-                withCredentials([string(credentialsId: 'SNYK_API_TOKEN', variable: 'SNYK_API_TOKEN')]) {
-                    sh 'snyk auth ${SNYK_TOKEN}'
-                }
+                sh 'snyk auth ${SNYK_API_TOKEN}'
             }
         }
         
         stage('Build') {
             steps {
-              sh 'mvn package'
+                sh 'mvn package'
             }
         }
+
         stage('Snyk Container') {
-                    steps {
-                        catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
-                            sh 'snyk container test sebsnyk/juice-shop --file=Dockerfile --sarif-file-output=results-container.sarif'
-                        }
-                        recordIssues tool: sarif(name: 'Snyk Container', id: 'snyk-container', pattern: 'results-container.sarif')
-                    }
+            steps {
+                catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
+                    sh 'snyk container test sebsnyk/juice-shop --file=Dockerfile --sarif-file-output=results-container.sarif'
+                }
+                recordIssues tool: sarif(name: 'Snyk Container', id: 'snyk-container', pattern: 'results-container.sarif')
+            }
         }
 
         stage('Snyk Test using Snyk CLI') {
             steps {
-                sh './snyk test'
+                sh 'snyk test'
             }
         }
-
-        // stage('Test Image Before Deployment') {
-        //     steps {
-        //         sh """
-        //             docker rm -f spring3hibernate-test || true
-        //             docker run -d --name spring3hibernate-test -p 18080:8080 ${IMAGE_NAME}:${VERSION}
-
-        //             echo "Waiting for app to start..."
-        //             sleep 15
-
-        //             echo "Running health check..."
-        //             if ! curl --fail --silent http://localhost:18080 > /dev/null; then
-        //                 echo "❌ Health check failed"
-        //                 docker logs spring3hibernate-test
-        //                 exit 1
-        //             fi
-
-        //             echo "✅ Image passed health check."
-        //             docker rm -f spring3hibernate-test
-        //         """
-        //     }
-        // }
-
-        // stage('Deploy on QA Environment') {
-        //     steps {
-        //         sh """
-        //             docker rm -f spring3hibernate || true
-        //             docker run -itd --name spring3hibernate \
-        //                 --label traefik.enable=true \
-        //                 --label 'traefik.http.routers.spring3hibernate.rule=Host(\`qa-spring.santonix.com\`)' \
-        //                 --label traefik.port=8080 \
-        //                 ${IMAGE_NAME}:${VERSION}
-        //         """
-        //     }
-        // }
     }
 }
