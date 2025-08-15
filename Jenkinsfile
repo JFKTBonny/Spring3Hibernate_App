@@ -88,17 +88,17 @@ pipeline {
         //     }
         // }
 
-        stage('Deploy on QA Environment') {
-            steps {
-                sh """
-                    docker rm -f spring3hibernate || true
-                    docker run -itd --name spring3hibernate \
-                        --label traefik.enable=true \
-                        --label 'traefik.http.routers.spring3hibernate.rule=Host(\`qa-spring.santonix.com\`)' \
-                        --label traefik.port=8080 \
-                        ${IMAGE_NAME}:${VERSION}
-                """
-            }
-        }
+        // stage('Deploy on QA Environment') {
+        //     steps {
+        //         sh """
+        //             docker rm -f spring3hibernate || true
+        //             docker run -itd --name spring3hibernate \
+        //                 --label traefik.enable=true \
+        //                 --label 'traefik.http.routers.spring3hibernate.rule=Host(\`qa-spring.santonix.com\`)' \
+        //                 --label traefik.port=8080 \
+        //                 ${IMAGE_NAME}:${VERSION}
+        //         """
+        //     }
+        // }
     }
 }
