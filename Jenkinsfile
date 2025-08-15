@@ -54,12 +54,28 @@ pipeline {
             }
         }
 
-         stage('Build') {
+        stage('Authorize Snyk CLI') {
+            steps {
+                withCredentials([string(credentialsId: 'SNYK_API_TOKEN', variable: 'SNYK_API_TOKEN')]) {
+                    sh 'snyk auth ${SNYK_TOKEN}'
+                }
+            }
+        }
+        
+        stage('Build') {
             steps {
               sh 'mvn package'
             }
         }
-
+        stage('Snyk Container') {
+                    steps {
+                        catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
+                            sh 'snyk container test sebsnyk/juice-shop --file=Dockerfile --sarif-file-output=results-container.sarif'
+                        }
+                        recordIssues tool: sarif(name: 'Snyk Container', id: 'snyk-container', pattern: 'results-container.sarif')
+                    }
+        }
+        
         stage('Snyk Test using Snyk CLI') {
             steps {
                 sh './snyk test'
