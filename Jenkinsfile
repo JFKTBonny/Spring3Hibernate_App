@@ -54,6 +54,14 @@ pipeline {
             }
         }
 
+        stage('Install snyk CLI') {
+            steps {
+                script {
+                    sh 'npm install -g snyk'
+                }
+            }
+        }
+
         stage('Authorize Snyk CLI') {
             steps {
                 withCredentials([string(credentialsId: 'SNYK_API_TOKEN', variable: 'SNYK_API_TOKEN')]) {
@@ -75,7 +83,7 @@ pipeline {
                         recordIssues tool: sarif(name: 'Snyk Container', id: 'snyk-container', pattern: 'results-container.sarif')
                     }
         }
-        
+
         stage('Snyk Test using Snyk CLI') {
             steps {
                 sh './snyk test'
