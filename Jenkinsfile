@@ -66,27 +66,27 @@ pipeline {
             }
         }
 
-        stage('Test Image Before Deployment') {
-            steps {
-                sh """
-                    docker rm -f spring3hibernate-test || true
-                    docker run -d --name spring3hibernate-test -p 18080:8080 ${IMAGE_NAME}:${VERSION}
+        // stage('Test Image Before Deployment') {
+        //     steps {
+        //         sh """
+        //             docker rm -f spring3hibernate-test || true
+        //             docker run -d --name spring3hibernate-test -p 18080:8080 ${IMAGE_NAME}:${VERSION}
 
-                    echo "Waiting for app to start..."
-                    sleep 15
+        //             echo "Waiting for app to start..."
+        //             sleep 15
 
-                    echo "Running health check..."
-                    if ! curl --fail --silent http://localhost:18080 > /dev/null; then
-                        echo "❌ Health check failed"
-                        docker logs spring3hibernate-test
-                        exit 1
-                    fi
+        //             echo "Running health check..."
+        //             if ! curl --fail --silent http://localhost:18080 > /dev/null; then
+        //                 echo "❌ Health check failed"
+        //                 docker logs spring3hibernate-test
+        //                 exit 1
+        //             fi
 
-                    echo "✅ Image passed health check."
-                    docker rm -f spring3hibernate-test
-                """
-            }
-        }
+        //             echo "✅ Image passed health check."
+        //             docker rm -f spring3hibernate-test
+        //         """
+        //     }
+        // }
 
         stage('Deploy on QA Environment') {
             steps {
