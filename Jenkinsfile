@@ -19,6 +19,7 @@ pipeline {
     environment {
         IMAGE_NAME = "santonix/spring3hibernate"
         SNYK_API_TOKEN = credentials('SNYK_API_TOKEN')
+        
     }
 
     stages {
@@ -62,6 +63,21 @@ pipeline {
         stage('Build') {
             steps {
                 sh 'mvn package'
+            }
+        }
+
+        stage('Build Image') {
+            steps {
+                sh 'docker build -t ${IMAGE_NAME}:${VERSION} .'
+            }
+        }
+
+        stage('Snyk Container') {
+            steps {
+                catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
+                    sh 'snyk container test ${IMAGE_NAME}:${VERSION} --sarif-file-output=results-container.sarif'
+                }
+                recordIssues tool: sarif(name: 'Snyk Container', id: 'snyk-container', pattern: 'results-container.sarif')
             }
         }
 
