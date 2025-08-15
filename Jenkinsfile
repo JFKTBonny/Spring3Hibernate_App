@@ -4,7 +4,7 @@ pipeline {
     tools {
         jdk 'jdk17'
         maven 'maven3'
-        snyk 'snyk'
+        // snyk 'snyk'
     }
 
     parameters {
@@ -19,6 +19,7 @@ pipeline {
 
     environment {
         IMAGE_NAME = "santonix/spring3hibernate"
+        SNYK_API_TOKEN = credentials('SNYK_API_TOKEN')
     }
 
     stages {
@@ -34,35 +35,34 @@ pipeline {
             }
         }
 
-        stage('Pull Image for QA') {
-            steps {
-                sh "docker pull ${IMAGE_NAME}:${VERSION}"
-            }
-        }
+        
 
         stage('Download Latest Snyk CLI') {
             steps {
-                script {
-                    withCredentials([string(credentialsId: 'SNYK_API_TOKEN', variable: 'SNYK_API_TOKEN_VAR')]) {
-                        def latest_version = sh(
-                            script: 'curl -Is "https://github.com/snyk/snyk/releases/latest" | grep "^location" | sed s#.*tag/##g',
-                            returnStdout: true
-                        ).trim()
+                sh '''
+                    latest_version=$(curl -Is "https://github.com/snyk/cli/releases/latest" | grep "^location" | sed s#.*tag/##g | tr -d "\r")
+                    echo "Latest Snyk CLI Version: ${latest_version}"
 
-                        echo "Latest Snyk CLI Version: ${latest_version}"
+                    snyk_cli_dl_linux="https://github.com/snyk/cli/releases/download/${latest_version}/snyk-linux"
+                    echo "Download URL: ${snyk_cli_dl_linux}"
 
-                        def snyk_cli_dl_linux = "https://github.com/snyk/snyk/releases/download/${latest_version}/snyk-linux"
-                        echo "Download URL: ${snyk_cli_dl_linux}"
+                    curl -Lo ./snyk "${snyk_cli_dl_linux}"
+                    chmod +x snyk
+                    ls -la
+                    ./snyk -v
+                '''
+            }
+        }
 
-                        sh """
-                            curl -Lo ./snyk "${snyk_cli_dl_linux}"
-                            chmod +x snyk
-                            ./snyk -v
-                        """
+         stage('Build') {
+            steps {
+              sh 'mvn package'
+            }
+        }
 
-                        sh './snyk auth ${SNYK_API_TOKEN_VAR}'
-                    }
-                }
+        stage('Snyk Test using Snyk CLI') {
+            steps {
+                sh './snyk test'
             }
         }
 
