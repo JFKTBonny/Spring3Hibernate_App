@@ -19,7 +19,7 @@ pipeline {
     environment {
         IMAGE_NAME = "santonix/spring3hibernate"
         SNYK_API_TOKEN = credentials('SNYK_API_TOKEN')
-        
+
     }
 
     stages {
@@ -72,7 +72,7 @@ pipeline {
             }
         }
 
-        stage('Snyk Container') {
+        stage('Snyk Container image related') {
             steps {
                 catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
                     sh 'snyk container test ${IMAGE_NAME}:${VERSION} --sarif-file-output=results-container.sarif'
@@ -81,7 +81,7 @@ pipeline {
             }
         }
 
-        stage('Snyk Container') {
+        stage('Snyk Container Dockerfile related') {
             steps {
                 catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
                     sh 'snyk container test sebsnyk/juice-shop --file=Dockerfile --sarif-file-output=results-container.sarif'
