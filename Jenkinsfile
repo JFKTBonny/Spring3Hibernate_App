@@ -4,7 +4,7 @@ pipeline {
     tools {
         jdk 'jdk17'
         maven 'maven3'
-        // snyk 'snyk'
+        snyk 'snyk'
     }
 
     parameters {
@@ -54,13 +54,7 @@ pipeline {
             }
         }
 
-        stage('Install snyk CLI') {
-            steps {
-                script {
-                    sh 'sudo -S npm install -g snyk'
-                }
-            }
-        }
+        
 
         stage('Authorize Snyk CLI') {
             steps {
