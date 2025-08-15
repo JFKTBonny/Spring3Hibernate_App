@@ -43,10 +43,13 @@ pipeline {
                     snyk_cli_dl_linux="https://github.com/snyk/cli/releases/download/${latest_version}/snyk-linux"
                     echo "Download URL: ${snyk_cli_dl_linux}"
 
-                    curl -Lo /usr/local/bin/snyk "${snyk_cli_dl_linux}"
-                    chmod +x /usr/local/bin/snyk
-                    snyk -v
+                    curl -Lo ./snyk "${snyk_cli_dl_linux}"
+                    chmod +x ./snyk
                 '''
+                // Make sure our custom snyk binary is found first
+                script {
+                    env.PATH = "${pwd()}:${env.PATH}"
+                }
             }
         }
 
