@@ -73,7 +73,11 @@ pipeline {
         stage('Snyk Container Scan') {
             steps {
                 catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
-                    sh 'snyk container test ${IMAGE_NAME}:${VERSION} --sarif-file-output=results-container.sarif'
+                    sh '''
+                        snyk container test ${IMAGE_NAME}:${VERSION} \
+                            --file=Dockerfile \
+                            --sarif-file-output=results-container.sarif
+                    '''
                 }
                 recordIssues tool: sarif(name: 'Snyk Container', id: 'snyk-container', pattern: 'results-container.sarif')
             }
